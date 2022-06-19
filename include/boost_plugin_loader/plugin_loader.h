@@ -67,21 +67,23 @@ public:
   std::string search_libraries_env;
 
   /**
-   * @brief Instantiate a plugin with the provided name
+   * @brief Loads a shared instance of a plugin of a specified type
+   * @throws If the plugin is not found
    * @param plugin_name The plugin name to find
-   * @return A instantiate of the plugin, if nullptr it failed to create plugin
+   * @return A shared instance
    */
   template <class PluginBase>
-  std::shared_ptr<PluginBase> instantiate(const std::string& plugin_name) const;
+  std::shared_ptr<PluginBase> createInstance(const std::string& plugin_name) const;
 
   /**
-   * @brief Get the available plugins for the provided PluginBase type
-   * @details This expects the Plugin base to have a static std::string SECTION_NAME which is used for looking up
-   * plugins
-   * @return A list of available plugins for the provided PluginBase type
+   * @brief Lists all available plugins of a specified base type
+   * @details This method requires that each plugin interface definition define a static string member called `section`.
+   * This string is used to denote symbols (i.e. plugin classes) in a library, such that all symbols a given section
+   * name can be found by the plugin loader. It is useful to specify a unique section name to each plugin interface
+   * class in order to find all implementations of that plugin interface in the libraries containing plugins.
    */
   template <class PluginBase>
-  std::vector<std::string> getAvailablePlugins() const;
+  std::vector<std::string> getAllAvailablePlugins() const;
 
   /**
    * @brief Check if plugin is available

@@ -53,8 +53,8 @@ boost::dll::shared_library loadLibrary(const std::string& library_name, const st
   return lib;
 }
 
-bool isClassAvailable(const std::string& symbol_name, const std::string& library_name,
-                      const std::string& library_directory)
+bool isSymbolAvailable(const std::string& symbol_name, const std::string& library_name,
+                       const std::string& library_directory)
 {
   boost::dll::shared_library lib;
   try

@@ -37,14 +37,14 @@ boost::dll::shared_library loadLibrary(const std::string& library_name, const st
 
 /**
  * @brief Check if the symbol is available in the library_name searching system folders for library
- * @details The symbol name is the alias provide when calling TESSERACT_ADD_PLUGIN
+ * @details The symbol name is the alias provide when calling EXPORT_CLASS_SECTIONED
  * @param symbol_name The symbol to create a shared instance of
  * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
  * @param library_directory The library directory, if empty it will enable search system directories
  * @return True if the symbol exists, otherwise false
  */
-bool isClassAvailable(const std::string& symbol_name, const std::string& library_name,
-                      const std::string& library_directory = "");
+bool isSymbolAvailable(const std::string& symbol_name, const std::string& library_name,
+                       const std::string& library_directory = "");
 
 /**
  * @brief Get a list of available symbols under the provided section

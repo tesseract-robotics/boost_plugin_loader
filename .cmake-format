@@ -98,7 +98,7 @@ with section("parse"):
         'EXCLUDE': '*',
       }
     },
-    'tesseract_cpack': {
+    'boost_plugin_loader_cpack': {
       'pargs': {'nargs': 0},
       'kwargs': {
         'VERSION': 1,

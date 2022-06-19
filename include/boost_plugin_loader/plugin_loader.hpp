@@ -30,7 +30,7 @@ namespace boost_plugin_loader
 /**
  * @brief Create a shared instance for the provided symbol_name loaded from the library_name searching system folders
  * for library
- * @details The symbol name is the alias provide when calling TESSERACT_ADD_PLUGIN
+ * @details The symbol name is the alias provide when calling EXPORT_CLASS_SECTIONED
  * @param symbol_name The symbol to create a shared instance of
  * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
  * @param library_directory The library directory, if empty it will enable search system directories
@@ -57,7 +57,7 @@ static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol
 }
 
 template <class PluginBase>
-std::shared_ptr<PluginBase> PluginLoader::instantiate(const std::string& plugin_name) const
+std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plugin_name) const
 {
   // Check for environment variable for plugin definitions
   std::set<std::string> plugins_local = getAllLibraryNames(search_libraries_env, search_libraries);
@@ -126,7 +126,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   {
     for (const auto& library : search_libraries)
     {
-      if (isClassAvailable(plugin_name, library, path))
+      if (isSymbolAvailable(plugin_name, library, path))
         return true;
     }
   }
@@ -136,7 +136,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   {
     for (const auto& library : search_libraries)
     {
-      if (isClassAvailable(plugin_name, library))
+      if (isSymbolAvailable(plugin_name, library))
         return true;
     }
   }
@@ -145,7 +145,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
 }
 
 template <class PluginBase>
-std::vector<std::string> PluginLoader::getAvailablePlugins() const
+std::vector<std::string> PluginLoader::getAllAvailablePlugins() const
 {
   return getAvailablePlugins(PluginBase::SECTION_NAME);
 }
