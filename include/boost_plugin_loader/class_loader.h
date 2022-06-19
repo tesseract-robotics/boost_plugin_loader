@@ -26,13 +26,13 @@
 namespace boost_plugin_loader
 {
 /**
- * @brief This is a wrapper around Boost DLL for loading plugins within Tesseract
+ * @brief This is a wrapper around Boost DLL for loading plugins
  * @details The library_name should not include the prefix 'lib' or suffix '.so'. It will add the correct prefix and
  * suffix based on the OS.
  *
- * The plugin must be exported using the macro TESSERACT_ADD_PLUGIN.
+ * The plugin must be exported using the macro EXPORT_CLASS_SECTIONED.
  * In the example below, the first parameter is the derived object and the second is the assigned symbol name which is
- * used for looding Example: TESSERACT_ADD_PLUGIN(my_namespace::MyPlugin, plugin)
+ * used for looding Example: EXPORT_CLASS_SECTIONED(my_namespace::MyPlugin, plugin, section)
  *
  *   auto p = ClassLoader::createSharedInstance<my_namespace::MyPluginBase>("my_plugin", "plugin");
  */
@@ -100,16 +100,6 @@ struct ClassLoader
   static inline std::string decorate(const std::string& library_name, const std::string& library_directory = "");
 };
 }  // namespace boost_plugin_loader
-
-// clang-format off
-#define TESSERACT_ADD_PLUGIN_SECTIONED(DERIVED_CLASS, ALIAS, SECTION)                                                  \
-  extern "C" BOOST_SYMBOL_EXPORT DERIVED_CLASS ALIAS;                                                                  \
-  BOOST_DLL_SECTION(SECTION, read) BOOST_DLL_SELECTANY                                                                 \
-  DERIVED_CLASS ALIAS;
-
-#define TESSERACT_ADD_PLUGIN(DERIVED_CLASS, ALIAS)                                                                     \
-  TESSERACT_ADD_PLUGIN_SECTIONED(DERIVED_CLASS, ALIAS, boostdll)
-// clang-format on
 
 #include <boost_plugin_loader/class_loader.hpp>
 

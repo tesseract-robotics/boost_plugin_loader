@@ -26,4 +26,4 @@ double boost_plugin_loader::TestPluginMultiply::multiply(double x, double y)
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-TESSERACT_ADD_PLUGIN_SECTIONED(boost_plugin_loader::TestPluginMultiply, plugin, TestBase)
+EXPORT_TEST_PLUGIN(boost_plugin_loader::TestPluginMultiply, plugin)

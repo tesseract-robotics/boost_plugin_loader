@@ -35,9 +35,9 @@ namespace boost_plugin_loader
  * It supports providing additional search paths and set environment variable which should be used when searching for
  * plugins.
  *
- * The plugin must be exported using the macro TESSERACT_ADD_PLUGIN.
+ * The plugin must be exported using the macro EXPORT_CLASS_SECTIONED.
  * In the example below, the first parameter is the derived object and the second is the assigned symbol name which is
- * used for loading Example: TESSERACT_ADD_PLUGIN(my_namespace::MyPlugin, plugin)
+ * used for loading Example: EXPORT_CLASS_SECTIONED(my_namespace::MyPlugin, plugin, section)
  *
  *   PluginLoader loader;
  *   loader.search_libraries.insert("my_plugin"); // libmy_plugin.so

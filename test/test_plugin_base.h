@@ -41,4 +41,7 @@ protected:
 
 }  // namespace boost_plugin_loader
 
+#include <boost_plugin_loader/macros.h>
+#define EXPORT_TEST_PLUGIN(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, TestBase)
+
 #endif  // BOOST_PLUGIN_LOADER_TEST_PLUGIN_BASE_H
