@@ -18,7 +18,7 @@
  */
 
 #include "test_plugin_multiply.h"
-#include <boost_plugin_loader/class_loader.h>
+#include <boost_plugin_loader/macros.h>
 
 double boost_plugin_loader::TestPluginMultiply::multiply(double x, double y)
 {

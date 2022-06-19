@@ -19,61 +19,50 @@
 #ifndef BOOST_PLUGIN_LOADER_PLUGIN_LOADER_HPP
 #define BOOST_PLUGIN_LOADER_PLUGIN_LOADER_HPP
 
-#include <boost/algorithm/string.hpp>
-#include <ostream>
+#include <boost/dll/import.hpp>
+#include <sstream>
 
 #include <boost_plugin_loader/plugin_loader.h>
-#include <boost_plugin_loader/class_loader.h>
+#include <boost_plugin_loader/utils.h>
 
 namespace boost_plugin_loader
 {
-inline std::set<std::string> parseEnvironmentVariableList(const std::string& env_variable)
+/**
+ * @brief Create a shared instance for the provided symbol_name loaded from the library_name searching system folders
+ * for library
+ * @details The symbol name is the alias provide when calling TESSERACT_ADD_PLUGIN
+ * @param symbol_name The symbol to create a shared instance of
+ * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
+ * @param library_directory The library directory, if empty it will enable search system directories
+ * @return A shared pointer of the object with the symbol name located in library_name_
+ */
+template <class ClassBase>
+static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol_name, const std::string& library_name,
+                                                       const std::string& library_directory = "")
 {
-  std::set<std::string> list;
-  char* env_var = std::getenv(env_variable.c_str());
-  if (env_var == nullptr)  // Environment variable not found
-    return list;
+  // Get library
+  boost::dll::shared_library lib = loadLibrary(library_name, library_directory);
 
-  std::string evn_str = std::string(env_var);
-  boost::split(list, evn_str, boost::is_any_of(":"), boost::token_compress_on);
-  return list;
-}
+  // Check if library has symbol
+  if (!lib.has(symbol_name))
+    throw std::runtime_error("Failed to find symbol '" + symbol_name +
+                             "' in library: " + decorate(library_name, library_directory));
 
-inline std::set<std::string> getAllSearchPaths(const std::string& search_paths_env,
-                                               const std::set<std::string>& existing_search_paths)
-{
-  // Check for environment variable to override default library
-  if (!search_paths_env.empty())
-  {
-    std::set<std::string> search_paths = parseEnvironmentVariableList(search_paths_env);
-    search_paths.insert(existing_search_paths.begin(), existing_search_paths.end());
-    return search_paths;
-  }
-
-  return existing_search_paths;
-}
-
-inline std::set<std::string> getAllSearchLibraries(const std::string& search_libraries_env,
-                                                   const std::set<std::string>& existing_search_libraries)
-{
-  // Check for environment variable to override default library
-  if (!search_libraries_env.empty())
-  {
-    std::set<std::string> search_libraries = parseEnvironmentVariableList(search_libraries_env);
-    search_libraries.insert(existing_search_libraries.begin(), existing_search_libraries.end());
-    return search_libraries;
-  }
-
-  return existing_search_libraries;
+#if BOOST_VERSION >= 107600
+  boost::shared_ptr<ClassBase> plugin = boost::dll::import_symbol<ClassBase>(lib, symbol_name);
+#else
+  boost::shared_ptr<ClassBase> plugin = boost::dll::import<ClassBase>(lib, symbol_name);
+#endif
+  return std::shared_ptr<ClassBase>(plugin.get(), [plugin](ClassBase*) mutable { plugin.reset(); });
 }
 
 template <class PluginBase>
 std::shared_ptr<PluginBase> PluginLoader::instantiate(const std::string& plugin_name) const
 {
   // Check for environment variable for plugin definitions
-  std::set<std::string> plugins_local = getAllSearchLibraries(search_libraries_env, search_libraries);
+  std::set<std::string> plugins_local = getAllLibraryNames(search_libraries_env, search_libraries);
   if (plugins_local.empty())
-    return nullptr;
+    throw std::runtime_error("No plugin libraries were provided!");
 
   // Check for environment variable for search paths
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
@@ -81,8 +70,14 @@ std::shared_ptr<PluginBase> PluginLoader::instantiate(const std::string& plugin_
   {
     for (const auto& library : search_libraries)
     {
-      if (ClassLoader::isClassAvailable(plugin_name, library, path))
-        return ClassLoader::createSharedInstance<PluginBase>(plugin_name, library, path);
+      try
+      {
+        return createSharedInstance<PluginBase>(plugin_name, library, path);
+      }
+      catch (...)
+      {
+        continue;
+      }
     }
   }
 
@@ -91,8 +86,14 @@ std::shared_ptr<PluginBase> PluginLoader::instantiate(const std::string& plugin_
   {
     for (const auto& library : search_libraries)
     {
-      if (ClassLoader::isClassAvailable(plugin_name, library))
-        return ClassLoader::createSharedInstance<PluginBase>(plugin_name, library);
+      try
+      {
+        return createSharedInstance<PluginBase>(plugin_name, library);
+      }
+      catch (...)
+      {
+        continue;
+      }
     }
   }
 
@@ -107,17 +108,17 @@ std::shared_ptr<PluginBase> PluginLoader::instantiate(const std::string& plugin_
 
   msg << "Search Libraries:" << std::endl;
   for (const auto& library : search_libraries)
-    msg << "    - " + ClassLoader::decorate(library) << std::endl;
+    msg << "    - " + decorate(library) << std::endl;
 
-  return nullptr;
+  throw std::runtime_error(msg.str());
 }
 
 bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
 {
   // Check for environment variable for plugin definitions
-  std::set<std::string> plugins_local = getAllSearchLibraries(search_libraries_env, search_libraries);
+  std::set<std::string> plugins_local = getAllLibraryNames(search_libraries_env, search_libraries);
   if (plugins_local.empty())
-    return false;
+    throw std::runtime_error("No plugin libraries were provided!");
 
   // Check for environment variable to override default library
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
@@ -125,7 +126,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   {
     for (const auto& library : search_libraries)
     {
-      if (ClassLoader::isClassAvailable(plugin_name, library, path))
+      if (isClassAvailable(plugin_name, library, path))
         return true;
     }
   }
@@ -135,7 +136,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   {
     for (const auto& library : search_libraries)
     {
-      if (ClassLoader::isClassAvailable(plugin_name, library))
+      if (isClassAvailable(plugin_name, library))
         return true;
     }
   }
@@ -151,20 +152,19 @@ std::vector<std::string> PluginLoader::getAvailablePlugins() const
 
 std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& section) const
 {
-  std::vector<std::string> plugins;
-
   // Check for environment variable for plugin definitions
-  std::set<std::string> plugins_local = getAllSearchLibraries(search_libraries_env, search_libraries);
-  if (plugins_local.empty())
-    return plugins;
+  std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
+  if (library_names.empty())
+    throw std::runtime_error("No plugin libraries were provided!");
 
   // Check for environment variable to override default library
+  std::vector<std::string> plugins;
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   for (const auto& path : search_paths_local)
   {
     for (const auto& library : search_libraries)
     {
-      std::vector<std::string> lib_plugins = ClassLoader::getAvailableSymbols(section, library, path);
+      std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, library, path);
       plugins.insert(plugins.end(), lib_plugins.begin(), lib_plugins.end());
     }
   }
@@ -177,9 +177,9 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   std::vector<std::string> sections;
 
   // Check for environment variable for plugin definitions
-  std::set<std::string> plugins_local = getAllSearchLibraries(search_libraries_env, search_libraries);
+  std::set<std::string> plugins_local = getAllLibraryNames(search_libraries_env, search_libraries);
   if (plugins_local.empty())
-    return sections;
+    throw std::runtime_error("No plugin libraries were provided!");
 
   // Check for environment variable to override default library
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
@@ -187,7 +187,7 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   {
     for (const auto& library : search_libraries)
     {
-      std::vector<std::string> lib_sections = ClassLoader::getAvailableSections(library, path, include_hidden);
+      std::vector<std::string> lib_sections = getAllAvailableSections(library, path, include_hidden);
       sections.insert(sections.end(), lib_sections.begin(), lib_sections.end());
     }
   }
@@ -197,7 +197,12 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
 
 int PluginLoader::count() const
 {
-  return static_cast<int>(getAllSearchLibraries(search_libraries_env, search_libraries).size());
+  return static_cast<int>(getAllLibraryNames(search_libraries_env, search_libraries).size());
+}
+
+bool PluginLoader::empty() const
+{
+  return (count() == 0);
 }
 
 }  // namespace boost_plugin_loader

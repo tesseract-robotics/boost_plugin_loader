@@ -31,13 +31,18 @@ set(COVERAGE_EXCLUDE
 initialize_code_coverage(ENABLE ${ENABLE_CODE_COVERAGE})
 add_code_coverage_all_targets(EXCLUDE ${COVERAGE_EXCLUDE} ENABLE ${ENABLE_CODE_COVERAGE})
 
-add_library(${PROJECT_NAME} INTERFACE)
-target_include_directories(${PROJECT_NAME} INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-                                                     "$<INSTALL_INTERFACE:include>")
-target_link_libraries(${PROJECT_NAME} INTERFACE Boost::boost Boost::filesystem ${CMAKE_DL_LIBS})
-target_compile_definitions(${PROJECT_NAME} INTERFACE ${COMPILE_DEFINITIONS})
-target_cxx_version(${PROJECT_NAME} INTERFACE VERSION 17)
+add_library(${PROJECT_NAME} src/utils.cpp)
+target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+                                                  "$<INSTALL_INTERFACE:include>")
+target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost Boost::filesystem ${CMAKE_DL_LIBS})
+target_compile_definitions(${PROJECT_NAME} PUBLIC ${COMPILE_DEFINITIONS})
+target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 17)
 target_clang_tidy(${PROJECT_NAME} ENABLE ${ENABLE_CLANG_TIDY})
+target_code_coverage(
+  ${PROJECT_NAME}
+  ALL
+  EXCLUDE ${COVERAGE_EXCLUDE}
+  ENABLE ${ENABLE_CODE_COVERAGE})
 
 # Install headers
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})

@@ -28,7 +28,7 @@
 namespace boost_plugin_loader
 {
 /**
- * @brief This is a utility class for loading plugins within Tesseract
+ * @brief This is a utility class for loading plugins
  * @details The library_name should not include the prefix 'lib' or suffix '.so'. It will add the correct prefix and
  * suffix based on the OS.
  *
@@ -75,13 +75,6 @@ public:
   std::shared_ptr<PluginBase> instantiate(const std::string& plugin_name) const;
 
   /**
-   * @brief Check if plugin is available
-   * @param plugin_name The plugin name to find
-   * @return True if plugin is found
-   */
-  inline bool isPluginAvailable(const std::string& plugin_name) const;
-
-  /**
    * @brief Get the available plugins for the provided PluginBase type
    * @details This expects the Plugin base to have a static std::string SECTION_NAME which is used for looking up
    * plugins
@@ -89,6 +82,13 @@ public:
    */
   template <class PluginBase>
   std::vector<std::string> getAvailablePlugins() const;
+
+  /**
+   * @brief Check if plugin is available
+   * @param plugin_name The plugin name to find
+   * @return True if plugin is found
+   */
+  inline bool isPluginAvailable(const std::string& plugin_name) const;
 
   /**
    * @brief Get the available plugins under the provided section
@@ -108,6 +108,12 @@ public:
    * @return The number of plugins.
    */
   inline int count() const;
+
+  /**
+   * @brief Check if empty
+   * @return True if no search libraries exist
+   */
+  inline bool empty() const;
 };
 
 }  // namespace boost_plugin_loader

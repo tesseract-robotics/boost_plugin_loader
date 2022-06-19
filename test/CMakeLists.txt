@@ -51,3 +51,9 @@ target_code_coverage(
 add_gtest_discover_tests(${PROJECT_NAME}_plugin_loader_unit)
 add_dependencies(${PROJECT_NAME}_plugin_loader_unit ${PROJECT_NAME})
 add_dependencies(run_tests ${PROJECT_NAME}_plugin_loader_unit)
+
+install(
+  TARGETS ${PROJECT_NAME}_test_plugin_multiply
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib)

@@ -18,86 +18,112 @@
  */
 
 #include <gtest/gtest.h>
-#include <boost_plugin_loader/class_loader.h>
+#include <boost_plugin_loader/utils.h>
 #include <boost_plugin_loader/plugin_loader.h>
 #include "test_plugin_base.h"
 
 const std::string boost_plugin_loader::TestPluginBase::SECTION_NAME = "TestBase";
 
-TEST(BoostClassLoaderUnit, parseEnvironmentVariableListUnit)  // NOLINT
+TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 {
-  std::string env_var = "UNITTESTENV=a:b:c";
-  putenv(env_var.data());
-  std::set<std::string> s = boost_plugin_loader::parseEnvironmentVariableList("UNITTESTENV");
-  std::vector<std::string> v(s.begin(), s.end());
-  EXPECT_EQ(v[0], "a");
-  EXPECT_EQ(v[1], "b");
-  EXPECT_EQ(v[2], "c");
-}
-
-TEST(BoostClassLoaderUnit, LoadTestPlugin)  // NOLINT
-{
-  using boost_plugin_loader::ClassLoader;
-  using boost_plugin_loader::TestPluginBase;
+  using namespace boost_plugin_loader;
   const std::string lib_name = std::string(PLUGINS);
   const std::string lib_dir = std::string(PLUGIN_DIR);
   const std::string symbol_name = "plugin";
 
   {
-    std::vector<std::string> sections = ClassLoader::getAvailableSections(lib_name, lib_dir);
+    std::string env_var = "UNITTESTENV=a:b:c";
+    putenv(env_var.data());
+    std::set<std::string> s = parseEnvironmentVariableList("UNITTESTENV");
+    std::vector<std::string> v(s.begin(), s.end());
+    EXPECT_EQ(v[0], "a");
+    EXPECT_EQ(v[1], "b");
+    EXPECT_EQ(v[2], "c");
+
+    s = parseEnvironmentVariableList("does_not_exist");
+    EXPECT_TRUE(s.empty());
+  }
+
+  {  // Test getAllSearchPaths
+    std::string env_var = "UNITTESTENV=a:b:c";
+    putenv(env_var.data());
+    std::string search_paths_env = "UNITTESTENV";
+    std::set<std::string> existing_search_paths;
+    std::set<std::string> s = getAllSearchPaths(search_paths_env, existing_search_paths);
+    EXPECT_EQ(s.size(), 3);
+    search_paths_env.clear();
+    s = getAllSearchPaths(search_paths_env, existing_search_paths);
+    EXPECT_TRUE(s.empty());
+    existing_search_paths = { "d", "e" };
+    s = getAllSearchPaths(search_paths_env, existing_search_paths);
+    EXPECT_EQ(s.size(), 2);
+  }
+
+  {  // Test getAllLibraryNames
+    std::string env_var = "UNITTESTENV=a:b:c";
+    putenv(env_var.data());
+    std::string search_paths_env = "UNITTESTENV";
+    std::set<std::string> existing_search_paths;
+    std::set<std::string> s = getAllLibraryNames(search_paths_env, existing_search_paths);
+    EXPECT_EQ(s.size(), 3);
+    search_paths_env.clear();
+    s = getAllSearchPaths(search_paths_env, existing_search_paths);
+    EXPECT_TRUE(s.empty());
+    existing_search_paths = { "d", "e" };
+    s = getAllSearchPaths(search_paths_env, existing_search_paths);
+    EXPECT_EQ(s.size(), 2);
+  }
+
+  {
+    std::vector<std::string> sections = getAllAvailableSections(lib_name, lib_dir);
     EXPECT_EQ(sections.size(), 1);
     EXPECT_EQ(sections.at(0), "TestBase");
 
-    sections = ClassLoader::getAvailableSections(lib_name, lib_dir, true);
+    sections = getAllAvailableSections(lib_name, lib_dir, true);
     EXPECT_TRUE(sections.size() > 1);
   }
 
   {
-    std::vector<std::string> symbols = ClassLoader::getAvailableSymbols("TestBase", lib_name, lib_dir);
+    std::vector<std::string> symbols = getAllAvailableSymbols("TestBase", lib_name, lib_dir);
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), symbol_name);
   }
 
   {
-    EXPECT_TRUE(ClassLoader::isClassAvailable(symbol_name, lib_name, lib_dir));
-    auto plugin = ClassLoader::createSharedInstance<TestPluginBase>(symbol_name, lib_name, lib_dir);
-    EXPECT_TRUE(plugin != nullptr);
-    EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
+    EXPECT_TRUE(isClassAvailable(symbol_name, lib_name, lib_dir));
   }
 
 // For some reason on Ubuntu 18.04 it does not search the current directory when only the library name is provided
 #if BOOST_VERSION > 106800
   {
-    EXPECT_TRUE(ClassLoader::isClassAvailable(symbol_name, lib_name));
-    auto plugin = ClassLoader::createSharedInstance<TestPluginBase>(symbol_name, lib_name);
-    EXPECT_TRUE(plugin != nullptr);
-    EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
+    EXPECT_TRUE(isClassAvailable(symbol_name, lib_name));
   }
 #endif
 
   {
-    EXPECT_FALSE(ClassLoader::isClassAvailable(symbol_name, lib_name, "does_not_exist"));
-    EXPECT_FALSE(ClassLoader::isClassAvailable(symbol_name, "does_not_exist", lib_dir));
-    EXPECT_FALSE(ClassLoader::isClassAvailable("does_not_exist", lib_name, lib_dir));
-  }
-
-  {
-    EXPECT_FALSE(ClassLoader::isClassAvailable(symbol_name, "does_not_exist"));
-    EXPECT_FALSE(ClassLoader::isClassAvailable("does_not_exist", lib_name));
+    EXPECT_FALSE(isClassAvailable(symbol_name, lib_name, "does_not_exist"));
+    EXPECT_FALSE(isClassAvailable(symbol_name, "does_not_exist", lib_dir));
+    EXPECT_FALSE(isClassAvailable("does_not_exist", lib_name, lib_dir));
   }
 
   {
     // NOLINTNEXTLINE
-    EXPECT_ANY_THROW(ClassLoader::createSharedInstance<TestPluginBase>(symbol_name, lib_name, "does_not_exist"));
-    // NOLINTNEXTLINE
-    EXPECT_ANY_THROW(ClassLoader::createSharedInstance<TestPluginBase>(symbol_name, "does_not_exist", lib_dir));
-    // NOLINTNEXTLINE
-    EXPECT_ANY_THROW(ClassLoader::createSharedInstance<TestPluginBase>("does_not_exist", lib_name, lib_dir));
+    EXPECT_FALSE(isClassAvailable(symbol_name, "does_not_exist"));
+    EXPECT_FALSE(isClassAvailable("does_not_exist", lib_name));
   }
 
   {
-    EXPECT_ANY_THROW(ClassLoader::createSharedInstance<TestPluginBase>(symbol_name, "does_not_exist"));  // NOLINT
-    EXPECT_ANY_THROW(ClassLoader::createSharedInstance<TestPluginBase>("does_not_exist", lib_name));     // NOLINT
+    // NOLINTNEXTLINE
+    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(symbol_name, lib_name, "does_not_exist"));
+    // NOLINTNEXTLINE
+    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(symbol_name, "does_not_exist", lib_dir));
+    // NOLINTNEXTLINE
+    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>("does_not_exist", lib_name, lib_dir));
+  }
+
+  {
+    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(symbol_name, "does_not_exist"));  // NOLINT
+    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>("does_not_exist", lib_name));     // NOLINT
   }
 }
 
@@ -136,7 +162,11 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
 #if BOOST_VERSION > 106800
   {
     PluginLoader plugin_loader;
+    EXPECT_EQ(plugin_loader.count(), 0);
+    EXPECT_TRUE(plugin_loader.empty());
     plugin_loader.search_libraries.insert(std::string(PLUGINS));
+    EXPECT_EQ(plugin_loader.count(), 1);
+    EXPECT_FALSE(plugin_loader.empty());
 
     EXPECT_TRUE(plugin_loader.isPluginAvailable("plugin"));
     auto plugin = plugin_loader.instantiate<TestPluginBase>("plugin");
@@ -151,11 +181,10 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     plugin_loader.search_paths.insert("does_not_exist");
     plugin_loader.search_libraries.insert(std::string(PLUGINS));
 
-    {
-      EXPECT_FALSE(plugin_loader.isPluginAvailable("plugin"));
-      auto plugin = plugin_loader.instantiate<TestPluginBase>("plugin");
-      EXPECT_TRUE(plugin == nullptr);
-    }
+    EXPECT_FALSE(plugin_loader.isPluginAvailable("plugin"));
+    // Behavior change: used to return nullptr but now throws exception
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.instantiate<TestPluginBase>("plugin"));
   }
 
   {
@@ -165,16 +194,18 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
 
     {
       EXPECT_FALSE(plugin_loader.isPluginAvailable("does_not_exist"));
-      auto plugin = plugin_loader.instantiate<TestPluginBase>("does_not_exist");
-      EXPECT_TRUE(plugin == nullptr);
+      // Behavior change: used to return nullptr but now throws exception
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_ANY_THROW(plugin_loader.instantiate<TestPluginBase>("does_not_exist"));
     }
 
     plugin_loader.search_system_folders = true;
 
     {
       EXPECT_FALSE(plugin_loader.isPluginAvailable("does_not_exist"));
-      auto plugin = plugin_loader.instantiate<TestPluginBase>("does_not_exist");
-      EXPECT_TRUE(plugin == nullptr);
+      // Behavior change: used to return nullptr but now throws exception
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_ANY_THROW(plugin_loader.instantiate<TestPluginBase>("does_not_exist"));
     }
   }
 
@@ -185,32 +216,52 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
 
     {
       EXPECT_FALSE(plugin_loader.isPluginAvailable("plugin"));
-      auto plugin = plugin_loader.instantiate<TestPluginBase>("plugin");
-      EXPECT_TRUE(plugin == nullptr);
+      // Behavior change: used to return nullptr but now throws exception
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_ANY_THROW(plugin_loader.instantiate<TestPluginBase>("plugin"));
     }
 
     plugin_loader.search_system_folders = true;
 
     {
       EXPECT_FALSE(plugin_loader.isPluginAvailable("plugin"));
-      auto plugin = plugin_loader.instantiate<TestPluginBase>("plugin");
-      EXPECT_TRUE(plugin == nullptr);
+      // Behavior change: used to return nullptr but now throws exception
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_ANY_THROW(plugin_loader.instantiate<TestPluginBase>("plugin"));
     }
   }
 
   {
     PluginLoader plugin_loader;
-    EXPECT_FALSE(plugin_loader.isPluginAvailable("plugin"));
-    auto plugin = plugin_loader.instantiate<TestPluginBase>("plugin");
-    EXPECT_TRUE(plugin == nullptr);
+    // Behavior change: used to return empty vector but now throws exception
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins("TestBase"));
+    // Behavior change: used to return empty vector but now throws exception
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.getAvailableSections("plugin"));
+    // Behavior change: used to return nullptr but now throws exception
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.isPluginAvailable("plugin"));
+    // Behavior change: used to return nullptr but now throws exception
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.instantiate<TestPluginBase>("plugin"));
   }
 
   {
     PluginLoader plugin_loader;
     plugin_loader.search_system_folders = false;
-    EXPECT_FALSE(plugin_loader.isPluginAvailable("plugin"));
-    auto plugin = plugin_loader.instantiate<TestPluginBase>("plugin");
-    EXPECT_TRUE(plugin == nullptr);
+    // Behavior change: used to return empty vector but now throws exception
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins("TestBase"));
+    // Behavior change: used to return empty vector but now throws exception
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.getAvailableSections("plugin"));
+    // Behavior change: used to return nullptr but now throws exception
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.isPluginAvailable("plugin"));
+    // Behavior change: used to return nullptr but now throws exception
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.instantiate<TestPluginBase>("plugin"));
   }
 }
 
