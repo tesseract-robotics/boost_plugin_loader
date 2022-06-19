@@ -1,6 +1,8 @@
 # Boost Plugin Loader
 Plugin loading library based on Boost DLL
 
+[![codecov](https://codecov.io/gh/tesseract-robotics/boost_plugin_loader/branch/main/graph/badge.svg?token=rTx5ziwNlg)](https://codecov.io/gh/tesseract-robotics/boost_plugin_loader)
+
 Platform             | CI Status
 ---------------------|:---------
 Linux (Focal)        | [![Build Status](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/ubuntu_focal.yml/badge.svg)](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/ubuntu_focal.yml)
