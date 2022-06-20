@@ -34,8 +34,8 @@ The only requirement for a plugin base class is that it have a member `static st
 The section name is a unique 8-byte string that associates implementations to the base class.
 The plugin loader method `getAllAvailablePlugins` can identify all symbols in a library with this section name and thereby return all implementations of a particular base class.
 It is also generally useful to define a new export macro for the base class that invokes the `EXPORT_CLASS_SECTIONED` macro with the section name directly.
-See the [test plugin base class definition](test/plugin.h) for an example.
+See the [test plugin base class definition](examples/plugin.h) for an example.
 
 ## Declaring plugin implementations
 Creating an implementation of a plugin is as simple as inheriting from the plugin base class, and calling the `EXPORT_CLASS_SECTIONED` macro with the correct section
-(or calling a custom export macro defined for the plugin base class, described above). See the [test plugin implementations](test/plugin_impl.cpp) for an example.
+(or calling a custom export macro defined for the plugin base class, described above). See the [test plugin implementations](examples/plugin_impl.cpp) for an example.

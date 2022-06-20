@@ -25,6 +25,11 @@
 #include <memory>
 #include <vector>
 
+/** @brief Macro for explicitly template instantiating a plugin loader for a given base class */
+#define INSTANTIATE_PLUGIN_LOADER(PluginBase)                                                                          \
+  template std::vector<std::string> boost_plugin_loader::PluginLoader::getAllAvailablePlugins<PluginBase>() const;     \
+  template std::shared_ptr<PluginBase> boost_plugin_loader::PluginLoader::createInstance(const std::string&) const;
+
 namespace boost_plugin_loader
 {
 /**
