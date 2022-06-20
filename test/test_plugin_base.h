@@ -26,16 +26,11 @@ namespace boost_plugin_loader
 class TestPluginBase
 {
 public:
-  TestPluginBase() = default;
   virtual ~TestPluginBase() = default;
-  TestPluginBase(const TestPluginBase&) = default;
-  TestPluginBase& operator=(const TestPluginBase&) = default;
-  TestPluginBase(TestPluginBase&&) = default;
-  TestPluginBase& operator=(TestPluginBase&&) = default;
   virtual double multiply(double x, double y) = 0;
 
 protected:
-  static const std::string SECTION_NAME;
+  static const std::string section;
   friend class PluginLoader;
 };
 

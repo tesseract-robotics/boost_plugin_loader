@@ -22,7 +22,7 @@
 #include <boost_plugin_loader/plugin_loader.h>
 #include "test_plugin_base.h"
 
-const std::string boost_plugin_loader::TestPluginBase::SECTION_NAME = "TestBase";
+const std::string boost_plugin_loader::TestPluginBase::section = "TestBase";
 
 TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 {
