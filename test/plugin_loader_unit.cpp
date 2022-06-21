@@ -231,6 +231,24 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
 
   {
     PluginLoader plugin_loader;
+    plugin_loader.search_system_folders = false;
+    plugin_loader.search_libraries.insert(std::string(PLUGINS));
+
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins("TestBase"));
+  }
+
+  {
+    PluginLoader plugin_loader;
+    plugin_loader.search_system_folders = true;
+    plugin_loader.search_libraries.insert(std::string(PLUGINS));
+
+    std::vector<std::string> plugins = plugin_loader.getAvailablePlugins("TestBase");
+    EXPECT_EQ(plugins.size(), 1);
+  }
+
+  {
+    PluginLoader plugin_loader;
     // Behavior change: used to return empty vector but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
     EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins("TestBase"));
