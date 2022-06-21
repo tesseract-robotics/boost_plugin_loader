@@ -149,7 +149,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     sections = plugin_loader.getAvailableSections(true);
     EXPECT_TRUE(sections.size() > 1);
 
-    std::vector<std::string> symbols = plugin_loader.getAllAvailablePlugins<TestPluginBase>();
+    std::vector<std::string> symbols = plugin_loader.getAvailablePlugins<TestPluginBase>();
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), "plugin");
 

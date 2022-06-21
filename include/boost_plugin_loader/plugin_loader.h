@@ -27,7 +27,7 @@
 
 /** @brief Macro for explicitly template instantiating a plugin loader for a given base class */
 #define INSTANTIATE_PLUGIN_LOADER(PluginBase)                                                                          \
-  template std::vector<std::string> boost_plugin_loader::PluginLoader::getAllAvailablePlugins<PluginBase>() const;     \
+  template std::vector<std::string> boost_plugin_loader::PluginLoader::getAvailablePlugins<PluginBase>() const;        \
   template std::shared_ptr<PluginBase> boost_plugin_loader::PluginLoader::createInstance(const std::string&) const;
 
 namespace boost_plugin_loader
@@ -88,7 +88,7 @@ public:
    * class in order to find all implementations of that plugin interface in the libraries containing plugins.
    */
   template <class PluginBase>
-  std::vector<std::string> getAllAvailablePlugins() const;
+  std::vector<std::string> getAvailablePlugins() const;
 
   /**
    * @brief Check if plugin is available

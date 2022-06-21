@@ -30,7 +30,7 @@ int main(int /*argc*/, char** /*argv*/)  // NOLINT
   loader.search_paths.insert(PLUGIN_DIR);
   loader.search_libraries.insert(PLUGINS);
 
-  std::vector<std::string> printer_plugins = loader.getAllAvailablePlugins<Printer>();
+  std::vector<std::string> printer_plugins = loader.getAvailablePlugins<Printer>();
   assert(printer_plugins.size() == 2);
 
   for (const std::string& plugin_name : printer_plugins)
@@ -41,7 +41,7 @@ int main(int /*argc*/, char** /*argv*/)  // NOLINT
     plugin->operator()();
   }
 
-  std::vector<std::string> shape_plugins = loader.getAllAvailablePlugins<Shape>();
+  std::vector<std::string> shape_plugins = loader.getAvailablePlugins<Shape>();
   assert(shape_plugins.size() == 2);
 
   for (const std::string& plugin_name : shape_plugins)
