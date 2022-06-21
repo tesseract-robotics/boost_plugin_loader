@@ -83,6 +83,7 @@ std::string decorate(const std::string& library_name, const std::string& library
 
 /**
  * @brief Extract list form environment variable
+ * @details The environment variables should be separated by a colon (":")
  * @param env_variable The environment variable name to extract list from
  * @return A list extracted from variable name
  */
