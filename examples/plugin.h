@@ -29,10 +29,10 @@ class Printer
 public:
   using Ptr = std::shared_ptr<Printer>;
   virtual void operator()() const = 0;
+  static const std::string& getSection();
 
 private:
   friend class PluginLoader;
-  static const std::string section;
 };
 
 /** @brief Plugin interface implementation for testing */
@@ -41,10 +41,10 @@ class Shape
 public:
   using Ptr = std::shared_ptr<Shape>;
   virtual void operator()() const = 0;
+  static const std::string& getSection();
 
 private:
   friend class PluginLoader;
-  static const std::string section;
 };
 
 }  // namespace boost_plugin_loader

@@ -41,9 +41,7 @@ target_clang_tidy(${PROJECT_NAME} ENABLE ${ENABLE_CLANG_TIDY})
 target_code_coverage(${PROJECT_NAME} ALL ENABLE ${ENABLE_CODE_COVERAGE})
 
 # Build examples
-if(NOT WIN32)
-  add_subdirectory(examples)
-endif()
+add_subdirectory(examples)
 
 # Install headers
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})

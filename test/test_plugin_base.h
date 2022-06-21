@@ -28,9 +28,13 @@ class TestPluginBase
 public:
   virtual ~TestPluginBase() = default;
   virtual double multiply(double x, double y) = 0;
+  static const std::string& getSection()
+  {
+    static const std::string section = "TestBase";
+    return section;
+  }
 
 protected:
-  static const std::string section;
   friend class PluginLoader;
 };
 

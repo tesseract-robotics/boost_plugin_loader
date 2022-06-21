@@ -147,7 +147,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
 template <class PluginBase>
 std::vector<std::string> PluginLoader::getAvailablePlugins() const
 {
-  return getAvailablePlugins(PluginBase::section);
+  return getAvailablePlugins(PluginBase::getSection());
 }
 
 std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& section) const

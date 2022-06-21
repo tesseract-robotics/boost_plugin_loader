@@ -23,11 +23,19 @@ namespace boost_plugin_loader
 {
 // Define the section name for loading plugins of base class `Printer`
 // This should match the section name specified in the plugin export macro for this class
-const std::string Printer::section = "printer";
+const std::string& Printer::getSection()
+{
+  static const std::string section = "printer";
+  return section;
+}
 INSTANTIATE_PLUGIN_LOADER(Printer)
 
 // Define the section name for loading plugins of base class `Shape`
 // This should match the section name specified in the plugin export macro for this class
-const std::string Shape::section = "shape";
+const std::string& Shape::getSection()
+{
+  static const std::string section = "shape";
+  return section;
+}
 INSTANTIATE_PLUGIN_LOADER(Shape)
 }  // namespace boost_plugin_loader
