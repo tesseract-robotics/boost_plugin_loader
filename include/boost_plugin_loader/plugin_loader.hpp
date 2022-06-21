@@ -160,6 +160,15 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   // Check for environment variable to override default library
   std::vector<std::string> plugins;
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
+  if (search_paths_local.empty())
+  {
+    if (!search_system_folders)
+      throw std::runtime_error("No plugin search paths were provided!");
+
+    // Insert an empty string into the search paths set to look in system folders
+    search_paths_local.insert(std::string{});
+  }
+
   for (const auto& path : search_paths_local)
   {
     for (const auto& library : search_libraries)
