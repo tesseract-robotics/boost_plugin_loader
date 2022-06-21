@@ -32,6 +32,25 @@
 
 namespace boost_plugin_loader
 {
+/** @brief Used to test for getSection method for getAvailablePlugins */
+template <typename T>
+struct has_getSection
+{
+  template <typename U>
+  static constexpr decltype(std::declval<U>().getSection(), bool()) test_getSection(int)
+  {
+    return true;
+  }
+
+  template <typename U>
+  static constexpr bool test_getSection(...)
+  {
+    return false;
+  }
+
+  static constexpr bool value = test_getSection<T>(int());
+};
+
 /**
  * @brief This is a utility class for loading plugins
  * @details The library_name should not include the prefix 'lib' or suffix '.so'. It will add the correct prefix and
@@ -88,7 +107,8 @@ public:
    * class in order to find all implementations of that plugin interface in the libraries containing plugins.
    */
   template <class PluginBase>
-  std::vector<std::string> getAvailablePlugins() const;
+  typename std::enable_if<has_getSection<PluginBase>::value, std::vector<std::string>>::type
+  getAvailablePlugins() const;
 
   /**
    * @brief Check if plugin is available
