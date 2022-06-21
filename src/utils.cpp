@@ -47,8 +47,8 @@ boost::dll::shared_library loadLibrary(const std::string& library_name, const st
 
   // Check if it failed to find or load library
   if (ec)
-    throw std::runtime_error("Failed to find or load library: " + decorate(library_name, library_directory) +
-                             " with error: " + ec.message());
+    throw PluginLoaderException("Failed to find or load library: " + decorate(library_name, library_directory) +
+                                " with error: " + ec.message());
 
   return lib;
 }

@@ -27,6 +27,13 @@
 
 namespace boost_plugin_loader
 {
+/** @brief The Boost Plugin Loader Exception class */
+class PluginLoaderException : public std::runtime_error
+{
+public:
+  using std::runtime_error::runtime_error;
+};
+
 /**
  * @brief Attempt to load library give library name and directory
  * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'

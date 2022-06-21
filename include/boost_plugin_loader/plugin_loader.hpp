@@ -45,8 +45,8 @@ static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol
 
   // Check if library has symbol
   if (!lib.has(symbol_name))
-    throw std::runtime_error("Failed to find symbol '" + symbol_name +
-                             "' in library: " + decorate(library_name, library_directory));
+    throw PluginLoaderException("Failed to find symbol '" + symbol_name +
+                                "' in library: " + decorate(library_name, library_directory));
 
 #if BOOST_VERSION >= 107600
   boost::shared_ptr<ClassBase> plugin = boost::dll::import_symbol<ClassBase>(lib, symbol_name);
@@ -62,7 +62,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   // Check for environment variable for plugin definitions
   std::set<std::string> plugins_local = getAllLibraryNames(search_libraries_env, search_libraries);
   if (plugins_local.empty())
-    throw std::runtime_error("No plugin libraries were provided!");
+    throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for environment variable for search paths
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
@@ -110,7 +110,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   for (const auto& library : search_libraries)
     msg << "    - " + decorate(library) << std::endl;
 
-  throw std::runtime_error(msg.str());
+  throw PluginLoaderException(msg.str());
 }
 
 bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
@@ -118,7 +118,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   // Check for environment variable for plugin definitions
   std::set<std::string> plugins_local = getAllLibraryNames(search_libraries_env, search_libraries);
   if (plugins_local.empty())
-    throw std::runtime_error("No plugin libraries were provided!");
+    throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for environment variable to override default library
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
@@ -155,7 +155,7 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   // Check for environment variable for plugin definitions
   std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
   if (library_names.empty())
-    throw std::runtime_error("No plugin libraries were provided!");
+    throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for environment variable to override default library
   std::vector<std::string> plugins;
@@ -163,7 +163,7 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   if (search_paths_local.empty())
   {
     if (!search_system_folders)
-      throw std::runtime_error("No plugin search paths were provided!");
+      throw PluginLoaderException("No plugin search paths were provided!");
 
     // Insert an empty string into the search paths set to look in system folders
     search_paths_local.insert(std::string{});
@@ -188,7 +188,7 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   // Check for environment variable for plugin definitions
   std::set<std::string> plugins_local = getAllLibraryNames(search_libraries_env, search_libraries);
   if (plugins_local.empty())
-    throw std::runtime_error("No plugin libraries were provided!");
+    throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for environment variable to override default library
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
