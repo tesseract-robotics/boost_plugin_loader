@@ -13,12 +13,12 @@ jobs:
     name: Ubuntu-Focal
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
         with:
-          path: src/boost_plugin_loader
+          path: workspace/src/boost_plugin_loader
 
       - name: Install dependencies
-        working-directory: ../..
+        working-directory: workspace
         run: |
           pwd
           sudo apt update -q
@@ -27,23 +27,23 @@ jobs:
           sudo pip3 install -q colcon-common-extensions rosdep vcstool
           sudo rosdep init -q
           rosdep update -q
-          vcs import --input "${{ github.workspace }}/dependencies.repos" src/
+          vcs import --input "${{ github.workspace }}/workspace/src/boost_plugin_loader/dependencies.repos" src/
           rosdep install --from-paths src --ignore-src -r -y -q
 
       - name: Build
-        working-directory: ../..
+        working-directory: workspace
         run: |
           colcon build --event-handlers console_direct+ --cmake-args -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON
           if [ $? -ne 0 ]; then exit 1; fi
 
       - name: Test
-        working-directory: ../..
+        working-directory: workspace
         run: |
           colcon test --event-handlers console_direct+ --return-code-on-test-failure
           colcon test-result
 
       - name: CodeCov
-        working-directory: ../..
+        working-directory: workspace
         run: |
           source install/setup.bash
           make -C ./build/boost_plugin_loader ccov-all
