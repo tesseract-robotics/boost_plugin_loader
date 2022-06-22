@@ -1,0 +1,58 @@
+name: Package-Debian-Build
+
+on:
+  push:
+    tags:
+      - '*'
+
+  # allow manually starting this workflow
+  workflow_dispatch:
+
+jobs:
+  industrial_ci:
+    name: Noetic
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: workspace/src/boost_plugin_loader
+
+      - name: Create artifacts directory
+        run: |
+          mkdir artifacts
+
+      - name: Install dependencies
+        working-directory: workspace
+        run: |
+          pwd
+          sudo apt update -q
+          sudo apt install -q -y clang-tidy python3 python3-pip
+          sudo pip3 install -q --upgrade pip
+          sudo pip3 install -q colcon-common-extensions rosdep vcstool
+          sudo rosdep init -q
+          rosdep update -q
+          vcs import --input "${{ github.workspace }}/workspace/src/boost_plugin_loader/dependencies.repos" src/
+          rosdep install --from-paths src --ignore-src -r -y -q
+
+      - name: Build
+        working-directory: workspace
+        run: |
+          colcon build --event-handlers console_direct+ --cmake-args -DCMAKE_BUILD_TYPE=Release -DENABLE_CPACK=ON
+          if [ $? -ne 0 ]; then exit 1; fi
+
+      - name: Package
+        working-directory: workspace/build/boost_plugin_loader
+        run: |
+          cpack --config CPackConfig.cmake
+          cp ./*.deb ${{ github.workspace }}/artifacts
+          cp ./*.tar.xz ${{ github.workspace }}/artifacts
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: debian_package
+          path: ${{ github.workspace }}/artifacts/*.deb
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: archive_package
+          path: ${{ github.workspace }}/artifacts/*.tar.xz

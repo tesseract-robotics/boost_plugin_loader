@@ -16,6 +16,7 @@ option(ENABLE_CLANG_TIDY "Enables compilation with clang-tidy" OFF)
 option(ENABLE_CODE_COVERAGE "Enables compilation with code coverage" OFF)
 option(BUILD_TESTING "Enables compilation of unit tests" OFF)
 option(ENABLE_RUN_TESTING "Enables running of unit tests as a part of the build" OFF)
+option(ENABLE_CPACK "Enable cpack to generate debian or nuget packages" OFF)
 
 set(COMPILE_DEFINITIONS "")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -55,3 +56,23 @@ endif()
 
 # Package configuration
 configure_package(NAMESPACE ${PROJECT_NAME} DEPENDENCIES "Boost REQUIRED COMPONENTS filesystem" TARGETS ${PROJECT_NAME})
+
+if(ENABLE_CPACK)
+  cpack(
+    VERSION
+    ${pkg_extracted_version}
+    MAINTAINER
+    <https://github.com/tesseract-robotics/boost_plugin_loader>
+    VENDOR
+    "ROS-Industrial"
+    DESCRIPTION
+    "${PROJECT_NAME}"
+    LICENSE_FILE
+    ${CMAKE_CURRENT_LIST_DIR}/LICENSE.Apache-2.0
+    README_FILE
+    ${CMAKE_CURRENT_LIST_DIR}/README.md
+    LINUX_DEPENDS
+    "libboost-filesystem1.71.0"
+    WINDOWS_DEPENDS
+    "boost_filesystem")
+endif()
