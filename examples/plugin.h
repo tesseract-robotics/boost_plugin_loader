@@ -23,16 +23,23 @@
 
 namespace boost_plugin_loader
 {
+// Forward declare PluginLoader and has_getSection classes
+class PluginLoader;
+
+template <typename T>
+struct has_getSection;
+
 /** @brief Plugin interface implementation for testing */
 class Printer
 {
 public:
   using Ptr = std::shared_ptr<Printer>;
   virtual void operator()() const = 0;
-  static const std::string& getSection();
 
 private:
   friend class PluginLoader;
+  friend struct has_getSection<Printer>;
+  static std::string getSection();
 };
 
 /** @brief Plugin interface implementation for testing */
@@ -41,10 +48,11 @@ class Shape
 public:
   using Ptr = std::shared_ptr<Shape>;
   virtual void operator()() const = 0;
-  static const std::string& getSection();
 
 private:
   friend class PluginLoader;
+  friend struct has_getSection<Shape>;
+  static std::string getSection();
 };
 
 }  // namespace boost_plugin_loader

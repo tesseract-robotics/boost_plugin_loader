@@ -30,9 +30,11 @@ Generally this is the easiest approach.
 1. Add a list of library names to an arbitrary environment variable (separated by colon), and set the `search_paths_env` member to the name of that environment variable
 
 ## Defining a plugin base class
-The only requirement for a plugin base class is that it have a member `static std::string section` which defines a section name for the plugin and is accessible to the plugin loader class.
+At a minimum, there are no requirements on the definition of a base class that can be used with this plugin loader.
+However, there is one optional requirement for enabling the plugin loader to discover the names of all plugins inheriting a specific base class type.
+Namely, the plugin base class must have a member function `static std::string getSection()` which defines a section name for the plugin and is accessible to the `PluginLoader` and `has_getSection` classes.
 The section name is a unique 8-byte string that associates implementations to the base class.
-The plugin loader method `getAllAvailablePlugins` can identify all symbols in a library with this section name and thereby return all implementations of a particular base class.
+The plugin loader method `getAvailablePlugins` can identify all symbols in a library with this section name and thereby return all implementations of a particular base class.
 It is also generally useful to define a new export macro for the base class that invokes the `EXPORT_CLASS_SECTIONED` macro with the section name directly.
 See the [test plugin base class definition](examples/plugin.h) for an example.
 
