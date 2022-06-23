@@ -19,6 +19,7 @@
 #include "plugin.h"
 #include <boost_plugin_loader/plugin_loader.h>
 #include <iostream>
+#include <cassert>
 
 using boost_plugin_loader::PluginLoader;
 using boost_plugin_loader::Printer;
