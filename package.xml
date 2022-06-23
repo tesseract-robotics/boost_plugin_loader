@@ -11,6 +11,9 @@
 
   <license>Apache 2.0</license>
 
+  <!-- Following recommendations of REP 136 -->
+  <buildtool_depend>cmake</buildtool_depend>
+  
   <build_depend>ros_industrial_cmake_boilerplate</build_depend>
   <build_depend>libboost-filesystem-dev</build_depend>
   <build_export_depend>libboost-filesystem-dev</build_export_depend>
