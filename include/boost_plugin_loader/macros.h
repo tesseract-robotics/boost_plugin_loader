@@ -16,7 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
+#ifndef BOOST_PLUGIN_LOADER_MACROS_H
+#define BOOST_PLUGIN_LOADER_MACROS_H
 
 #include <boost/dll/alias.hpp>
 
@@ -24,3 +25,5 @@
 #define EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, SECTION)                                                          \
   extern "C" BOOST_SYMBOL_EXPORT DERIVED_CLASS ALIAS;                                                                  \
   BOOST_DLL_SECTION(SECTION, read) BOOST_DLL_SELECTANY DERIVED_CLASS ALIAS;
+
+#endif // BOOST_PLUGIN_LOADER_MACROS_H
