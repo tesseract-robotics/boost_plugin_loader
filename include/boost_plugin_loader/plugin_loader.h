@@ -145,6 +145,4 @@ public:
 
 }  // namespace boost_plugin_loader
 
-#include <boost_plugin_loader/plugin_loader.hpp>
-
 #endif  // BOOST_PLUGIN_LOADER_PLUGIN_LOADER_H

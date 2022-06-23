@@ -16,3 +16,13 @@ target_link_libraries(${PROJECT_NAME}_example PRIVATE ${PROJECT_NAME}_example_pl
 target_compile_definitions(${PROJECT_NAME}_example PRIVATE PLUGIN_DIR="${CMAKE_CURRENT_BINARY_DIR}"
                                                            PLUGINS="${PROJECT_NAME}_example_plugin_impl")
 target_clang_tidy(${PROJECT_NAME}_example ENABLE ${ENABLE_CLANG_TIDY})
+
+# Install the plugin libraries
+install(
+  TARGETS ${PROJECT_NAME}_example_plugin ${PROJECT_NAME}_example_plugin_impl
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib)
+
+# Install the example executable
+install(TARGETS ${PROJECT_NAME}_example RUNTIME DESTINATION lib/${PROJECT_NAME})

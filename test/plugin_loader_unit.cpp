@@ -19,7 +19,7 @@
 
 #include <gtest/gtest.h>
 #include <boost_plugin_loader/utils.h>
-#include <boost_plugin_loader/plugin_loader.h>
+#include <boost_plugin_loader/plugin_loader.hpp>
 #include "test_plugin_base.h"
 
 TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
