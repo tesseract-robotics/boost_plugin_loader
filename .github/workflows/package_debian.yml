@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  industrial_ci:
+  Debian:
     name: Noetic
     runs-on: ubuntu-latest
     steps:
