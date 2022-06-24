@@ -2,6 +2,18 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update package CI
+* Add cassert include to example
+* Update package.xml
+* Updates (`#3 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/3>`_)
+  * Updated example and README
+  * Replace pragma once with header guard
+  * Remove include of implementation in header
+  * Simplify test plugin getSection
+* Contributors: Levi Armstrong, Michael Ripperger
+
 0.1.1 (2022-06-21)
 ------------------
 * Add cpack
