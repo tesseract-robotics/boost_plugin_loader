@@ -18,13 +18,15 @@ jobs:
         path: workspace/src/boost_plugin_loader
 
     - name: install-depends
+      working-directory: workspace
       shell: cmd
       run: |
         python -m pip install vcstool -q
         python -m pip install colcon-common-extensions -q
         python -m pip install ninja -q
+        mkdir install
         nuget install ${{ github.workspace }}/workspace/src/boost_plugin_loader/packages.config -OutputDirectory ${{ github.workspace }}/workspace/install
-        dir ${{ github.workspace }}/workspace/install
+        dir install
 
     - name: configure-msvc
       uses: ilammy/msvc-dev-cmd@v1
