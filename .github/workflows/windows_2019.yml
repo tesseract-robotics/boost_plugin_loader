@@ -23,7 +23,7 @@ jobs:
         python -m pip install vcstool -q
         python -m pip install colcon-common-extensions -q
         python -m pip install ninja -q
-        nuget install ${{ github.workspace }}/workspace/src/boost_plugin_loader/packages.config
+        nuget install ${{ github.workspace }}/workspace/src/boost_plugin_loader/packages.config -OutputDirectory ${{ github.workspace }}/workspace/install
 
     - name: configure-msvc
       uses: ilammy/msvc-dev-cmd@v1
