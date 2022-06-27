@@ -25,7 +25,7 @@ jobs:
         python -m pip install colcon-common-extensions -q
         python -m pip install ninja -q
         mkdir install
-        nuget install ${{ github.workspace }}/workspace/src/boost_plugin_loader/packages.config -OutputDirectory ${{ github.workspace }}/workspace/install
+        nuget install ${{ github.workspace }}/workspace/src/boost_plugin_loader/packages.config -OutputDirectory ${{ github.workspace }}/workspace/install -ExcludeVersion
         dir install
 
     - name: configure-msvc
