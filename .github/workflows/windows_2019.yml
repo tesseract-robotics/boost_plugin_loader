@@ -27,6 +27,8 @@ jobs:
         mkdir install
         nuget install ${{ github.workspace }}/workspace/src/boost_plugin_loader/packages.config -OutputDirectory ${{ github.workspace }}/workspace/install -ExcludeVersion
         dir install
+        dir install/boost
+        dir install/boost_filesystem-vc140
 
     - name: configure-msvc
       uses: ilammy/msvc-dev-cmd@v1
