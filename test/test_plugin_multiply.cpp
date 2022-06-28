@@ -25,5 +25,10 @@ double boost_plugin_loader::TestPluginMultiply::multiply(double x, double y)
   return x * y;
 }
 
+const void* boost_plugin_loader::TestPluginMultiplyAnchor()
+{
+  return (const void*)(&TestPluginMultiplyAnchor);  // NOLINT
+}
+
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 EXPORT_TEST_PLUGIN(boost_plugin_loader::TestPluginMultiply, plugin)

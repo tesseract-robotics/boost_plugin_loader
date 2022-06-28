@@ -22,6 +22,7 @@
 #include <boost/dll/alias.hpp>
 #include <boost/dll/import_class.hpp>
 #include <boost/dll/shared_library.hpp>
+#include <boost/dll/runtime_symbol_info.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <boost_plugin_loader/utils.h>
@@ -82,6 +83,45 @@ std::vector<std::string> getAllAvailableSymbols(const std::string& section, cons
   return inf.symbols(section);
 }
 
+void addSymbolLibraryToSearchLibrariesEnv(const void* symbol_ptr, const std::string& search_libraries_env,
+                                          const std::string& search_paths_env)
+{
+  std::string search_libraries_env_var_str;
+  char* search_libraries_env_var = std::getenv(search_libraries_env.c_str());
+  if (search_libraries_env_var != nullptr)
+    search_libraries_env_var_str = search_libraries_env_var;
+
+  std::string search_paths_env_var_str;
+  char* search_paths_env_var = std::getenv(search_paths_env.c_str());
+  if (search_paths_env_var != nullptr)
+    search_paths_env_var_str = search_paths_env_var;
+
+  boost::dll::fs::path lib_path = boost::dll::symbol_location_ptr(symbol_ptr);
+
+  std::string separator{ ":" };
+#ifdef _WIN32
+  separator = ";";
+#endif
+
+  if (search_libraries_env_var_str.empty())
+    search_libraries_env_var_str = lib_path.filename().string();
+  else
+    search_libraries_env_var_str = search_libraries_env_var_str + separator + lib_path.filename().string();
+
+  if (search_paths_env_var_str.empty())
+    search_paths_env_var_str = lib_path.parent_path().string();
+  else
+    search_paths_env_var_str = search_paths_env_var_str + separator + lib_path.parent_path().string();
+
+#ifndef _WIN32
+  setenv(search_libraries_env.c_str(), search_libraries_env_var_str.c_str(), 1);
+  setenv(search_paths_env.c_str(), search_paths_env_var_str.c_str(), 1);
+#else
+  _putenv_s(search_libraries_env.c_str(), search_libraries_env_var_str.c_str());
+  _putenv_s(search_paths_env.c_str(), search_paths_env_var_str.c_str());
+#endif
+}
+
 std::vector<std::string> getAllAvailableSections(const std::string& library_name, const std::string& library_directory,
                                                  bool include_hidden)
 {
@@ -122,7 +162,9 @@ std::string decorate(const std::string& library_name, const std::string& library
                                    sl.filename().native()) :
            sl);
 
-  actual_path += boost::dll::shared_library::suffix();
+  if (actual_path.extension().empty())
+    actual_path += boost::dll::shared_library::suffix();
+
   return actual_path.string();
 }
 
@@ -134,7 +176,11 @@ std::set<std::string> parseEnvironmentVariableList(const std::string& env_variab
     return list;
 
   std::string evn_str = std::string(env_var);
+#ifndef _WIN32
   boost::split(list, evn_str, boost::is_any_of(":"), boost::token_compress_on);
+#else
+  boost::split(list, evn_str, boost::is_any_of(";"), boost::token_compress_on);
+#endif
   return list;
 }
 

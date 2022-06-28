@@ -64,6 +64,21 @@ std::vector<std::string> getAllAvailableSymbols(const std::string& section, cons
                                                 const std::string& library_directory = "");
 
 /**
+ * @brief Utility function to add library containing symbol to the search env variable
+ *
+ * In some cases the name and location of a library is unknown at runtime, but a symbol can
+ * be linked at compile time. This is true for Python auditwheel distributions. This
+ * utility function will determine the location of the library, and add it to the library search
+ * environment variable so it can be found.
+ *
+ * @param symbol_ptr Pointer to the symbol to find
+ * @param search_libraries_env The environmental variable to modify with library name
+ * @param search_paths_env The environment variable to modify with library location
+ */
+void addSymbolLibraryToSearchLibrariesEnv(const void* symbol_ptr, const std::string& search_libraries_env,
+                                          const std::string& search_paths_env);
+
+/**
  * @brief Get a list of available sections
  * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
  * @param library_directory The library directory, if empty it will enable search system directories
@@ -90,7 +105,7 @@ std::string decorate(const std::string& library_name, const std::string& library
 
 /**
  * @brief Extract list form environment variable
- * @details The environment variables should be separated by a colon (":")
+ * @details The environment variables should be separated by a colon (":") on linux and semi-colon (";") on windows
  * @param env_variable The environment variable name to extract list from
  * @return A list extracted from variable name
  */

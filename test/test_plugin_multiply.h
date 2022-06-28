@@ -34,6 +34,9 @@ public:
   TestPluginMultiply& operator=(TestPluginMultiply&&) = default;
   double multiply(double x, double y) override;
 };
+
+const void* TestPluginMultiplyAnchor();
+
 }  // namespace boost_plugin_loader
 
 #endif  // BOOST_PLUGIN_LOADER_TEST_PLUGIN_SUM_H
