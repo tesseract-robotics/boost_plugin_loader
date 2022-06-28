@@ -26,4 +26,4 @@
   extern "C" BOOST_SYMBOL_EXPORT DERIVED_CLASS ALIAS;                                                                  \
   BOOST_DLL_SECTION(SECTION, read) BOOST_DLL_SELECTANY DERIVED_CLASS ALIAS;
 
-#endif // BOOST_PLUGIN_LOADER_MACROS_H
+#endif  // BOOST_PLUGIN_LOADER_MACROS_H

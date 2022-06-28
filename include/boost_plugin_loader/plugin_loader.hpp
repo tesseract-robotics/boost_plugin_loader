@@ -60,15 +60,15 @@ template <class PluginBase>
 std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plugin_name) const
 {
   // Check for environment variable for plugin definitions
-  std::set<std::string> plugins_local = getAllLibraryNames(search_libraries_env, search_libraries);
-  if (plugins_local.empty())
+  std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
+  if (library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for environment variable for search paths
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   for (const auto& path : search_paths_local)
   {
-    for (const auto& library : search_libraries)
+    for (const auto& library : library_names)
     {
       try
       {
@@ -84,7 +84,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   // If not found in any of the provided search paths then search system folders if allowed
   if (search_system_folders)
   {
-    for (const auto& library : search_libraries)
+    for (const auto& library : library_names)
     {
       try
       {
@@ -107,7 +107,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
     msg << "    - " + path << std::endl;
 
   msg << "Search Libraries:" << std::endl;
-  for (const auto& library : search_libraries)
+  for (const auto& library : library_names)
     msg << "    - " + decorate(library) << std::endl;
 
   throw PluginLoaderException(msg.str());
@@ -116,15 +116,15 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
 bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
 {
   // Check for environment variable for plugin definitions
-  std::set<std::string> plugins_local = getAllLibraryNames(search_libraries_env, search_libraries);
-  if (plugins_local.empty())
+  std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
+  if (library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for environment variable to override default library
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   for (const auto& path : search_paths_local)
   {
-    for (const auto& library : search_libraries)
+    for (const auto& library : library_names)
     {
       if (isSymbolAvailable(plugin_name, library, path))
         return true;
@@ -134,7 +134,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   // If not found in any of the provided search paths then search system folders if allowed
   if (search_system_folders)
   {
-    for (const auto& library : search_libraries)
+    for (const auto& library : library_names)
     {
       if (isSymbolAvailable(plugin_name, library))
         return true;
@@ -172,7 +172,7 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
 
   for (const auto& path : search_paths_local)
   {
-    for (const auto& library : search_libraries)
+    for (const auto& library : library_names)
     {
       std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, library, path);
       plugins.insert(plugins.end(), lib_plugins.begin(), lib_plugins.end());
@@ -187,15 +187,15 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   std::vector<std::string> sections;
 
   // Check for environment variable for plugin definitions
-  std::set<std::string> plugins_local = getAllLibraryNames(search_libraries_env, search_libraries);
-  if (plugins_local.empty())
+  std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
+  if (library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for environment variable to override default library
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   for (const auto& path : search_paths_local)
   {
-    for (const auto& library : search_libraries)
+    for (const auto& library : library_names)
     {
       std::vector<std::string> lib_sections = getAllAvailableSections(library, path, include_hidden);
       sections.insert(sections.end(), lib_sections.begin(), lib_sections.end());
