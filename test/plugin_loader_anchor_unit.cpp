@@ -33,11 +33,27 @@ TEST(BoostPluginLoaderUnit, LoadTestPluginUsingAnchor)  // NOLINT
     PluginLoader plugin_loader;
     plugin_loader.search_libraries.clear();
     plugin_loader.search_paths.clear();
-    plugin_loader.search_libraries_env = "PLUGIN_LOADER_UNIT_LIBRARY_NAMES_ENV";
-    plugin_loader.search_paths_env = "PLUGIN_LOADER_UNIT_LIBRARY_PATHS_ENV";
+    plugin_loader.search_libraries_env = "PLUGIN_LOADER_UNIT_LIBRARY_NAMES_1_ENV";
+    plugin_loader.search_paths_env = "PLUGIN_LOADER_UNIT_LIBRARY_PATHS_1_ENV";
     plugin_loader.search_system_folders = false;
     addSymbolLibraryToSearchLibrariesEnv(boost_plugin_loader::TestPluginMultiplyAnchor(),
                                          plugin_loader.search_libraries_env, plugin_loader.search_paths_env);
+    EXPECT_EQ(plugin_loader.count(), 1);
+    EXPECT_FALSE(plugin_loader.empty());
+    EXPECT_TRUE(plugin_loader.isPluginAvailable("plugin"));
+    auto plugin = plugin_loader.createInstance<TestPluginBase>("plugin");
+    EXPECT_TRUE(plugin != nullptr);
+    EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
+  }
+
+  {
+    PluginLoader plugin_loader;
+    plugin_loader.search_libraries.clear();
+    plugin_loader.search_paths.clear();
+    plugin_loader.search_libraries_env = "PLUGIN_LOADER_UNIT_LIBRARY_NAMES_2_ENV";
+    plugin_loader.search_system_folders = false;
+    addSymbolLibraryToSearchLibrariesEnv(boost_plugin_loader::TestPluginMultiplyAnchor(),
+                                         plugin_loader.search_libraries_env);
     EXPECT_EQ(plugin_loader.count(), 1);
     EXPECT_FALSE(plugin_loader.empty());
     EXPECT_TRUE(plugin_loader.isPluginAvailable("plugin"));

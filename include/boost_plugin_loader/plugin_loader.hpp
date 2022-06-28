@@ -56,6 +56,30 @@ static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol
   return std::shared_ptr<ClassBase>(plugin.get(), [plugin](ClassBase*) mutable { plugin.reset(); });
 }
 
+/**
+ * @brief This will remove libraries with full path in the provided library_names and return them.
+ * @param library_names The set to search and remove libraries with full paths
+ * @return A set of the libraries provided as full path
+ */
+inline std::set<std::string> extractLibrariesWithFullPath(std::set<std::string>& library_names)
+{
+  std::set<std::string> libraries_with_fullpath;
+  for (auto it = library_names.begin(); it != library_names.end();)
+  {
+    if (boost::filesystem::exists(*it))
+    {
+      libraries_with_fullpath.insert(*it);
+      it = library_names.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
+
+  return libraries_with_fullpath;
+}
+
 template <class PluginBase>
 std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plugin_name) const
 {
@@ -63,6 +87,20 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
   if (library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
+
+  // Check for libraries provided as full paths. These are searched first
+  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  for (const auto& library_fullpath : libraries_with_fullpath)
+  {
+    try
+    {
+      return createSharedInstance<PluginBase>(plugin_name, library_fullpath);
+    }
+    catch (...)
+    {
+      continue;
+    }
+  }
 
   // Check for environment variable for search paths
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
@@ -120,6 +158,14 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   if (library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
+  // Check for libraries provided as full paths. These are searched first
+  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  for (const auto& library_fullpath : libraries_with_fullpath)
+  {
+    if (isSymbolAvailable(plugin_name, library_fullpath))
+      return true;
+  }
+
   // Check for environment variable to override default library
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   for (const auto& path : search_paths_local)
@@ -158,8 +204,17 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   if (library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
-  // Check for environment variable to override default library
   std::vector<std::string> plugins;
+
+  // Check for libraries provided as full paths. These are searched first
+  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  for (const auto& library_fullpath : libraries_with_fullpath)
+  {
+    std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, library_fullpath);
+    plugins.insert(plugins.end(), lib_plugins.begin(), lib_plugins.end());
+  }
+
+  // Check for environment variable to override default library
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   if (search_paths_local.empty())
   {
@@ -190,6 +245,14 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
   if (library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
+
+  // Check for libraries provided as full paths. These are searched first
+  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  for (const auto& library_fullpath : libraries_with_fullpath)
+  {
+    std::vector<std::string> lib_sections = getAllAvailableSections(library_fullpath, "", include_hidden);
+    sections.insert(sections.end(), lib_sections.begin(), lib_sections.end());
+  }
 
   // Check for environment variable to override default library
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);

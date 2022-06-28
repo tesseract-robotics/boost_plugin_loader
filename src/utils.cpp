@@ -86,16 +86,6 @@ std::vector<std::string> getAllAvailableSymbols(const std::string& section, cons
 void addSymbolLibraryToSearchLibrariesEnv(const void* symbol_ptr, const std::string& search_libraries_env,
                                           const std::string& search_paths_env)
 {
-  std::string search_libraries_env_var_str;
-  char* search_libraries_env_var = std::getenv(search_libraries_env.c_str());
-  if (search_libraries_env_var != nullptr)
-    search_libraries_env_var_str = search_libraries_env_var;
-
-  std::string search_paths_env_var_str;
-  char* search_paths_env_var = std::getenv(search_paths_env.c_str());
-  if (search_paths_env_var != nullptr)
-    search_paths_env_var_str = search_paths_env_var;
-
   boost::dll::fs::path lib_path = boost::dll::symbol_location_ptr(symbol_ptr);
 
   std::string separator{ ":" };
@@ -103,23 +93,49 @@ void addSymbolLibraryToSearchLibrariesEnv(const void* symbol_ptr, const std::str
   separator = ";";
 #endif
 
-  if (search_libraries_env_var_str.empty())
-    search_libraries_env_var_str = lib_path.filename().string();
-  else
-    search_libraries_env_var_str = search_libraries_env_var_str + separator + lib_path.filename().string();
+  std::string search_libraries_env_var_str;
+  char* search_libraries_env_var = std::getenv(search_libraries_env.c_str());
+  if (search_libraries_env_var != nullptr)
+    search_libraries_env_var_str = search_libraries_env_var;
 
-  if (search_paths_env_var_str.empty())
-    search_paths_env_var_str = lib_path.parent_path().string();
-  else
-    search_paths_env_var_str = search_paths_env_var_str + separator + lib_path.parent_path().string();
+  if (search_paths_env.empty())
+  {
+    if (search_libraries_env_var_str.empty())
+      search_libraries_env_var_str = lib_path.string();
+    else
+      search_libraries_env_var_str = lib_path.string() + separator + search_libraries_env_var_str;
 
 #ifndef _WIN32
-  setenv(search_libraries_env.c_str(), search_libraries_env_var_str.c_str(), 1);
-  setenv(search_paths_env.c_str(), search_paths_env_var_str.c_str(), 1);
+    setenv(search_libraries_env.c_str(), search_libraries_env_var_str.c_str(), 1);
 #else
-  _putenv_s(search_libraries_env.c_str(), search_libraries_env_var_str.c_str());
-  _putenv_s(search_paths_env.c_str(), search_paths_env_var_str.c_str());
+    _putenv_s(search_libraries_env.c_str(), search_libraries_env_var_str.c_str());
 #endif
+  }
+  else
+  {
+    std::string search_paths_env_var_str;
+    char* search_paths_env_var = std::getenv(search_paths_env.c_str());
+    if (search_paths_env_var != nullptr)
+      search_paths_env_var_str = search_paths_env_var;
+
+    if (search_libraries_env_var_str.empty())
+      search_libraries_env_var_str = lib_path.filename().string();
+    else
+      search_libraries_env_var_str = lib_path.filename().string() + separator + search_libraries_env_var_str;
+
+    if (search_paths_env_var_str.empty())
+      search_paths_env_var_str = lib_path.parent_path().string();
+    else
+      search_paths_env_var_str = lib_path.parent_path().string() + separator + search_paths_env_var_str;
+
+#ifndef _WIN32
+    setenv(search_libraries_env.c_str(), search_libraries_env_var_str.c_str(), 1);
+    setenv(search_paths_env.c_str(), search_paths_env_var_str.c_str(), 1);
+#else
+    _putenv_s(search_libraries_env.c_str(), search_libraries_env_var_str.c_str());
+    _putenv_s(search_paths_env.c_str(), search_paths_env_var_str.c_str());
+#endif
+  }
 }
 
 std::vector<std::string> getAllAvailableSections(const std::string& library_name, const std::string& library_directory,

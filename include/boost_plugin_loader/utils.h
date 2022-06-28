@@ -70,13 +70,13 @@ std::vector<std::string> getAllAvailableSymbols(const std::string& section, cons
  * be linked at compile time. This is true for Python auditwheel distributions. This
  * utility function will determine the location of the library, and add it to the library search
  * environment variable so it can be found.
- *
+ * @note If search_paths_env is empty it will add the library full path to the search_libraries_env.
  * @param symbol_ptr Pointer to the symbol to find
  * @param search_libraries_env The environmental variable to modify with library name
  * @param search_paths_env The environment variable to modify with library location
  */
 void addSymbolLibraryToSearchLibrariesEnv(const void* symbol_ptr, const std::string& search_libraries_env,
-                                          const std::string& search_paths_env);
+                                          const std::string& search_paths_env = "");
 
 /**
  * @brief Get a list of available sections
