@@ -74,7 +74,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
       {
         return createSharedInstance<PluginBase>(plugin_name, library, path);
       }
-      catch (...)
+      catch (PluginLoaderException&)
       {
         continue;
       }
@@ -90,7 +90,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
       {
         return createSharedInstance<PluginBase>(plugin_name, library);
       }
-      catch (...)
+      catch (PluginLoaderException&)
       {
         continue;
       }

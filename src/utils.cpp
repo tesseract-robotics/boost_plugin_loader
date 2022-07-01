@@ -61,7 +61,7 @@ bool isSymbolAvailable(const std::string& symbol_name, const std::string& librar
   {
     lib = loadLibrary(library_name, library_directory);
   }
-  catch (...)
+  catch (PluginLoaderException&)
   {
     return false;
   }
