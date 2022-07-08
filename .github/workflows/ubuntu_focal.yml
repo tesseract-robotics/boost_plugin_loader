@@ -4,9 +4,14 @@ on:
   push:
     branches:
       - main
+    tags:
+      - '*'
   pull_request:
   schedule:
     - cron: '0 5 * * *'
+
+  # allow manually starting this workflow
+  workflow_dispatch:
 
 jobs:
   ci:
@@ -34,7 +39,7 @@ jobs:
       - name: Build
         working-directory: workspace
         run: |
-          colcon build --event-handlers console_direct+ --cmake-args -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON
+          colcon build --event-handlers console_direct+ --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON -DENABLE_CPACK=ON
           if [ $? -ne 0 ]; then exit 1; fi
 
       - name: Test
@@ -49,3 +54,23 @@ jobs:
           source install/setup.bash
           make -C ./build/boost_plugin_loader ccov-all
           bash <(curl -s https://codecov.io/bash) -t ec6ee46b-1f52-482c-82ef-1aaabc673f8d -s ./build/boost_plugin_loader -f *all-merged.info
+
+      - name: Package
+        if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+        working-directory: workspace/build/boost_plugin_loader
+        run: |
+          cpack --config CPackConfig.cmake
+          cp ./*.deb ${{ github.workspace }}/artifacts
+          cp ./*.tar.xz ${{ github.workspace }}/artifacts
+
+      - uses: actions/upload-artifact@v2
+        if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+        with:
+          name: debian_package
+          path: ${{ github.workspace }}/artifacts/*.deb
+
+      - uses: actions/upload-artifact@v2
+        if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+        with:
+          name: archive_package
+          path: ${{ github.workspace }}/artifacts/*.tar.xz
