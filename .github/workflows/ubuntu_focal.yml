@@ -33,7 +33,7 @@ jobs:
           pip3 install -q colcon-common-extensions rosdep vcstool
           rosdep init -q
           rosdep update -q
-          vcs import --input "${{ github.workspace }}/workspace/src/boost_plugin_loader/dependencies.repos" src/
+          vcs import src < src/boost_plugin_loader/dependencies.repos
           rosdep install --from-paths src --ignore-src -r -y -q
 
       - name: Build
