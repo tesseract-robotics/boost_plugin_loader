@@ -4,9 +4,14 @@ on:
   push:
     branches:
       - main
+    tags:
+      - '*'
   pull_request:
   schedule:
     - cron: '0 5 * * *'
+
+  # allow manually starting this workflow
+  workflow_dispatch:
 
 env:
   VCPKG_PKGS: >-
@@ -64,7 +69,7 @@ jobs:
       shell: cmd
       run: |
         vcs import --input "${{ github.workspace }}/workspace/src/plugin_loader/dependencies.repos" src/
-        colcon build --event-handlers console_direct+ --cmake-args -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+        colcon build --event-handlers console_direct+ --cmake-args -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DENABLE_CPACK=ON
         if %ERRORLEVEL% GEQ 1 exit 1
 
     - name: run-test
@@ -72,4 +77,24 @@ jobs:
       shell: cmd
       run: |
         colcon test --event-handlers console_direct+ --return-code-on-test-failure
-        colcon test-result --verbos
+        colcon test-result --verbose
+
+    - name: Package
+      if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+      working-directory: workspace/build/boost_plugin_loader
+      run: |
+        cpack --config CPackConfig.cmake
+        cp ./*.nupkg ${{ github.workspace }}/artifacts
+        cp ./*.tar.xz ${{ github.workspace }}/artifacts
+
+    - uses: actions/upload-artifact@v2
+      if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+      with:
+        name: nuget_package
+        path: ${{ github.workspace }}/artifacts/*.nupkg
+
+    - uses: actions/upload-artifact@v2
+      if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+      with:
+        name: archive_package
+        path: ${{ github.workspace }}/artifacts/*.tar.xz
