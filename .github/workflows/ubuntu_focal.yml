@@ -51,7 +51,7 @@ jobs:
       - name: CodeCov
         working-directory: workspace
         run: |
-          source install/setup.bash
+          . install/setup.bash
           make -C ./build/boost_plugin_loader ccov-all
           bash <(curl -s https://codecov.io/bash) -t ec6ee46b-1f52-482c-82ef-1aaabc673f8d -s ./build/boost_plugin_loader -f *all-merged.info
 
