@@ -31,6 +31,9 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 
   {
     std::string env_var = "UNITTESTENV=a:b:c";
+#ifdef _WIN32
+    env_var = "UNITTESTENV=a;b;c";
+#endif
     putenv(env_var.data());
     std::set<std::string> s = parseEnvironmentVariableList("UNITTESTENV");
     std::vector<std::string> v(s.begin(), s.end());
