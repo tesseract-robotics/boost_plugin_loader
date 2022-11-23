@@ -144,18 +144,18 @@ public:
 
 protected:
   template <typename PluginBase>
-  void reportErrorCommon(std::ostream& msg, const std::string& plugin_name, const bool search_system_folders,
+  void reportErrorCommon(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
                          const std::set<std::string>& search_paths,
                          const std::set<std::string>& search_libraries) const;
 
   template <typename PluginBase>
   typename std::enable_if<!has_getSection<PluginBase>::value, void>::type
-  reportError(std::ostream& msg, const std::string& plugin_name, const bool search_system_folders,
+  reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
               const std::set<std::string>& search_paths, const std::set<std::string>& search_libraries) const;
 
   template <typename PluginBase>
   typename std::enable_if<has_getSection<PluginBase>::value, void>::type
-  reportError(std::ostream& msg, const std::string& plugin_name, const bool search_system_folders,
+  reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
               const std::set<std::string>& search_paths, const std::set<std::string>& search_libraries) const;
 };
 

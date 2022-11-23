@@ -58,8 +58,8 @@ static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol
 }
 
 template <typename PluginBase>
-void PluginLoader::reportErrorCommon(std::ostream& msg, const std::string& plugin_name,
-                                     const bool search_system_folders, const std::set<std::string>& search_paths,
+void PluginLoader::reportErrorCommon(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
+                                     const std::set<std::string>& search_paths,
                                      const std::set<std::string>& search_libraries) const
 {
   const std::string plugin_base_type = boost::core::demangle(typeid(PluginBase).name());
@@ -77,7 +77,7 @@ void PluginLoader::reportErrorCommon(std::ostream& msg, const std::string& plugi
 
 template <typename PluginBase>
 typename std::enable_if<!has_getSection<PluginBase>::value, void>::type
-PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, const bool search_system_folders,
+PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
                           const std::set<std::string>& search_paths,
                           const std::set<std::string>& search_libraries) const
 {
@@ -86,7 +86,7 @@ PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, con
 
 template <typename PluginBase>
 typename std::enable_if<has_getSection<PluginBase>::value, void>::type
-PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, const bool search_system_folders,
+PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
                           const std::set<std::string>& search_paths,
                           const std::set<std::string>& search_libraries) const
 {
