@@ -141,6 +141,22 @@ public:
    * @return True if no search libraries exist
    */
   inline bool empty() const;
+
+protected:
+  template <typename PluginBase>
+  void reportErrorCommon(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
+                         const std::set<std::string>& search_paths,
+                         const std::set<std::string>& search_libraries) const;
+
+  template <typename PluginBase>
+  typename std::enable_if<!has_getSection<PluginBase>::value, void>::type
+  reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
+              const std::set<std::string>& search_paths, const std::set<std::string>& search_libraries) const;
+
+  template <typename PluginBase>
+  typename std::enable_if<has_getSection<PluginBase>::value, void>::type
+  reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
+              const std::set<std::string>& search_paths, const std::set<std::string>& search_libraries) const;
 };
 
 }  // namespace boost_plugin_loader

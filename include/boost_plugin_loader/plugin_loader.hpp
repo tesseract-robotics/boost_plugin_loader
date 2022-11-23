@@ -19,6 +19,7 @@
 #ifndef BOOST_PLUGIN_LOADER_PLUGIN_LOADER_HPP
 #define BOOST_PLUGIN_LOADER_PLUGIN_LOADER_HPP
 
+#include <boost/core/demangle.hpp>
 #include <boost/dll/import.hpp>
 #include <sstream>
 
@@ -54,6 +55,49 @@ static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol
   boost::shared_ptr<ClassBase> plugin = boost::dll::import<ClassBase>(lib, symbol_name);
 #endif
   return std::shared_ptr<ClassBase>(plugin.get(), [plugin](ClassBase*) mutable { plugin.reset(); });
+}
+
+template <typename PluginBase>
+void PluginLoader::reportErrorCommon(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
+                                     const std::set<std::string>& search_paths,
+                                     const std::set<std::string>& search_libraries) const
+{
+  const std::string plugin_base_type = boost::core::demangle(typeid(PluginBase).name());
+  msg << "Failed to create plugin instance '" << plugin_name << "' of type '" << plugin_base_type << "'" << std::endl;
+  msg << "Search Paths " << std::string(search_system_folders ? "(including " : "(not including ") << "system folders)"
+      << std::endl;
+
+  for (const auto& path : search_paths)
+    msg << "    - " + path << std::endl;
+
+  msg << "Search Libraries:" << std::endl;
+  for (const auto& library : search_libraries)
+    msg << "    - " + decorate(library) << std::endl;
+}
+
+template <typename PluginBase>
+typename std::enable_if<!has_getSection<PluginBase>::value, void>::type
+PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
+                          const std::set<std::string>& search_paths,
+                          const std::set<std::string>& search_libraries) const
+{
+  return reportErrorCommon<PluginBase>(msg, plugin_name, search_system_folders, search_paths, search_libraries);
+}
+
+template <typename PluginBase>
+typename std::enable_if<has_getSection<PluginBase>::value, void>::type
+PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
+                          const std::set<std::string>& search_paths,
+                          const std::set<std::string>& search_libraries) const
+{
+  reportErrorCommon<PluginBase>(msg, plugin_name, search_system_folders, search_paths, search_libraries);
+
+  // Add information about the available plugins
+  const std::string plugin_base_type = boost::core::demangle(typeid(PluginBase).name());
+  auto plugins = getAvailablePlugins(PluginBase::getSection());
+  msg << "Available plugins of type '" << plugin_base_type << "':" << std::endl;
+  for (const auto& p : plugins)
+    msg << "    - " + p << std::endl;
 }
 
 template <class PluginBase>
@@ -98,18 +142,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   }
 
   std::stringstream msg;
-  if (search_system_folders)
-    msg << std::endl << "Search Paths (Search System Folders: True):" << std::endl;
-  else
-    msg << std::endl << "Search Paths (Search System Folders: False):" << std::endl;
-
-  for (const auto& path : search_paths_local)
-    msg << "    - " + path << std::endl;
-
-  msg << "Search Libraries:" << std::endl;
-  for (const auto& library : library_names)
-    msg << "    - " + decorate(library) << std::endl;
-
+  reportError<PluginBase>(msg, plugin_name, search_system_folders, search_paths_local, library_names);
   throw PluginLoaderException(msg.str());
 }
 
