@@ -2,8 +2,8 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.1 (2022-12-09)
+------------------
 * Improved error messaging (`#14 <https://github.com/marip8/boost_plugin_loader/issues/14>`_)
 * Only catch plugin loader exception
 * Fix issue not using library names returned from getAllLibraryNames
