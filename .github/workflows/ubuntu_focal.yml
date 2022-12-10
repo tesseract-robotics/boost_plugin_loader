@@ -50,6 +50,7 @@ jobs:
 
       - name: CodeCov
         working-directory: workspace
+        shell: bash
         run: |
           source install/setup.bash
           make -C ./build/boost_plugin_loader ccov-all
