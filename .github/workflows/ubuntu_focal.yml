@@ -13,6 +13,9 @@ on:
   # allow manually starting this workflow
   workflow_dispatch:
 
+env:
+  BUILD_TYPE: Debug
+
 jobs:
   ci:
     name: Ubuntu-Focal
@@ -36,10 +39,15 @@ jobs:
           vcs import src < src/boost_plugin_loader/dependencies.repos
           rosdep install --from-paths src --ignore-src -r -y -q
 
+      - name: Set build type to Release
+        if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+        run: |
+          echo "BUILD_TYPE=Release" >> $GITHUB_ENV
+
       - name: Build
         working-directory: workspace
         run: |
-          colcon build --event-handlers console_direct+ --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON -DENABLE_CPACK=ON
+          colcon build --event-handlers console_direct+ --cmake-args -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON -DENABLE_CPACK=ON
           if [ $? -ne 0 ]; then exit 1; fi
 
       - name: Test
