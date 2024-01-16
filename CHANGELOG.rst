@@ -2,6 +2,13 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Catch exceptions when enumerating possible symbols and sections (`#17 <https://github.com/marip8/boost_plugin_loader/issues/17>`_)
+* CI Update (`#12 <https://github.com/marip8/boost_plugin_loader/issues/12>`_)
+* Change CI to run on Ubuntu 20.04 (`#15 <https://github.com/marip8/boost_plugin_loader/issues/15>`_)
+* Contributors: Michael Ripperger
+
 0.2.1 (2022-12-09)
 ------------------
 * Improved error messaging (`#14 <https://github.com/marip8/boost_plugin_loader/issues/14>`_)
