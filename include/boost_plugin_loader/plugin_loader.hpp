@@ -207,8 +207,14 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   {
     for (const auto& library : library_names)
     {
-      std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, library, path);
-      plugins.insert(plugins.end(), lib_plugins.begin(), lib_plugins.end());
+      try
+      {
+        std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, library, path);
+        plugins.insert(plugins.end(), lib_plugins.begin(), lib_plugins.end());
+      }
+      catch (const std::exception& /*ex*/)
+      {
+      }
     }
   }
 
@@ -230,8 +236,14 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   {
     for (const auto& library : library_names)
     {
-      std::vector<std::string> lib_sections = getAllAvailableSections(library, path, include_hidden);
-      sections.insert(sections.end(), lib_sections.begin(), lib_sections.end());
+      try
+      {
+        std::vector<std::string> lib_sections = getAllAvailableSections(library, path, include_hidden);
+        sections.insert(sections.end(), lib_sections.begin(), lib_sections.end());
+      }
+      catch (const std::exception& /*ex*/)
+      {
+      }
     }
   }
 
