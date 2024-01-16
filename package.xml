@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>boost_plugin_loader</name>
-  <version>0.2.1</version>
+  <version>0.2.2</version>
   <description>Boost plugin loader implementation</description>
 
   <author email="levi.armstrong@gmail.com">Levi Armstrong</author>
