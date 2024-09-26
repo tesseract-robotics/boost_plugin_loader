@@ -16,8 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "plugin.h"
-
+#include "printer.h"
 #include <iostream>
 
 namespace boost_plugin_loader
@@ -27,40 +26,10 @@ struct ConsolePrinter : public Printer
 public:
   void operator()() const override
   {
-    std::cout << "IMPL: ConsolePrinter\n";
-  }
-};
-
-struct HelloWorldPrinter : public Printer
-{
-public:
-  void operator()() const override
-  {
-    std::cout << "IMPL: Hello World\n";
-  }
-};
-
-struct Square : public Shape
-{
-public:
-  void operator()() const override
-  {
-    std::cout << "IMPL: Square\n";
-  }
-};
-
-struct Triangle : public Shape
-{
-public:
-  void operator()() const override
-  {
-    std::cout << "IMPL: Triangle\n";
+    std::cout << "IMPL: ConsolePrinter" << std::endl;
   }
 };
 
 }  // namespace boost_plugin_loader
 
 EXPORT_PRINTER_PLUGIN(boost_plugin_loader::ConsolePrinter, ConsolePrinter)
-EXPORT_PRINTER_PLUGIN(boost_plugin_loader::HelloWorldPrinter, HelloWorldPrinter)
-EXPORT_SHAPE_PLUGIN(boost_plugin_loader::Square, Square)
-EXPORT_SHAPE_PLUGIN(boost_plugin_loader::Triangle, Triangle)
