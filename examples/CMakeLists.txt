@@ -5,7 +5,12 @@ target_cxx_version(${PROJECT_NAME}_example_plugin PUBLIC VERSION 17)
 target_clang_tidy(${PROJECT_NAME}_example_plugin ENABLE ${ENABLE_CLANG_TIDY})
 
 # Example Implementation Library
-add_library(${PROJECT_NAME}_example_plugin_impl plugin_impl.cpp)
+add_library(
+  ${PROJECT_NAME}_example_plugin_impl
+  printer/console_printer.cpp
+  printer/hello_world_printer.cpp
+  shape/square.cpp
+  shape/triangle.cpp)
 target_link_libraries(${PROJECT_NAME}_example_plugin_impl PUBLIC ${PROJECT_NAME}_example_plugin)
 target_cxx_version(${PROJECT_NAME}_example_plugin_impl PUBLIC VERSION 17)
 target_clang_tidy(${PROJECT_NAME}_example_plugin_impl ENABLE ${ENABLE_CLANG_TIDY})

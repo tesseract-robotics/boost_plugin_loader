@@ -16,25 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "printer/printer.h"
-#include "shape/shape.h"
-#include <boost_plugin_loader/plugin_loader.hpp>
+#include "printer.h"
+#include <iostream>
 
 namespace boost_plugin_loader
 {
-// Define the section name for loading plugins of base class `Printer`
-// This should match the section name specified in the plugin export macro for this class
-std::string Printer::getSection()
+struct HelloWorldPrinter : public Printer
 {
-  return "printer";
-}
-INSTANTIATE_PLUGIN_LOADER(Printer)
+public:
+  void operator()() const override
+  {
+    std::cout << "IMPL: Hello World" << std::endl;
+  }
+};
 
-// Define the section name for loading plugins of base class `ShapeFactory`
-// This should match the section name specified in the plugin export macro for this class
-std::string ShapeFactory::getSection()
-{
-  return "shape";
-}
-INSTANTIATE_PLUGIN_LOADER(ShapeFactory)
 }  // namespace boost_plugin_loader
+
+EXPORT_PRINTER_PLUGIN(boost_plugin_loader::HelloWorldPrinter, HelloWorldPrinter)

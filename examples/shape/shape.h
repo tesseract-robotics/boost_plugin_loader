@@ -20,45 +20,43 @@
 
 #include <memory>
 #include <string>
+#include <any>
 
 namespace boost_plugin_loader
 {
+/**
+ * @brief Interface class for representing shapes that can compute area
+ */
+class Shape
+{
+public:
+  using Ptr = std::shared_ptr<Shape>;
+  virtual double area() const = 0;
+};
+
 // Forward declare PluginLoader and has_getSection classes
 class PluginLoader;
 
 template <typename T>
 struct has_getSection;
 
-/** @brief Plugin interface implementation for testing */
-class Printer
+/**
+ *  @brief Plugin interface for creating shape objects
+ */
+class ShapeFactory
 {
 public:
-  using Ptr = std::shared_ptr<Printer>;
-  virtual void operator()() const = 0;
+  using Ptr = std::shared_ptr<ShapeFactory>;
+  virtual std::shared_ptr<Shape> create(const std::any& params) const = 0;
 
 private:
   friend class PluginLoader;
-  friend struct has_getSection<Printer>;
-  static std::string getSection();
-};
-
-/** @brief Plugin interface implementation for testing */
-class Shape
-{
-public:
-  using Ptr = std::shared_ptr<Shape>;
-  virtual void operator()() const = 0;
-
-private:
-  friend class PluginLoader;
-  friend struct has_getSection<Shape>;
+  friend struct has_getSection<ShapeFactory>;
   static std::string getSection();
 };
 
 }  // namespace boost_plugin_loader
 
 #include <boost_plugin_loader/macros.h>
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-#define EXPORT_PRINTER_PLUGIN(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, printer)
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 #define EXPORT_SHAPE_PLUGIN(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, shape)

@@ -16,25 +16,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "printer/printer.h"
-#include "shape/shape.h"
-#include <boost_plugin_loader/plugin_loader.hpp>
+#pragma once
+
+#include <memory>
+#include <string>
 
 namespace boost_plugin_loader
 {
-// Define the section name for loading plugins of base class `Printer`
-// This should match the section name specified in the plugin export macro for this class
-std::string Printer::getSection()
-{
-  return "printer";
-}
-INSTANTIATE_PLUGIN_LOADER(Printer)
+// Forward declare PluginLoader and has_getSection classes
+class PluginLoader;
 
-// Define the section name for loading plugins of base class `ShapeFactory`
-// This should match the section name specified in the plugin export macro for this class
-std::string ShapeFactory::getSection()
+template <typename T>
+struct has_getSection;
+
+/** @brief Plugin interface implementation for testing */
+class Printer
 {
-  return "shape";
-}
-INSTANTIATE_PLUGIN_LOADER(ShapeFactory)
+public:
+  using Ptr = std::shared_ptr<Printer>;
+  virtual void operator()() const = 0;
+
+private:
+  friend class PluginLoader;
+  friend struct has_getSection<Printer>;
+  static std::string getSection();
+};
+
 }  // namespace boost_plugin_loader
+
+#include <boost_plugin_loader/macros.h>
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+#define EXPORT_PRINTER_PLUGIN(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, printer)
