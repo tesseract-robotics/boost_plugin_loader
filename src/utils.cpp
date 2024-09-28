@@ -110,17 +110,17 @@ std::vector<std::string> getAllAvailableSections(const std::string& library_name
 
 std::string decorate(const std::string& library_name, const std::string& library_directory)
 {
-  boost::filesystem::path sl;
+  boost::filesystem::path lib_path;
   if (library_directory.empty())
-    sl = boost::filesystem::path(library_name);
+    lib_path = boost::filesystem::path(library_name);
   else
-    sl = boost::filesystem::path(library_directory) / library_name;
+    lib_path = boost::filesystem::path(library_directory) / library_name;
 
   boost::filesystem::path actual_path =
-      (std::strncmp(sl.filename().string().c_str(), "lib", 3) != 0 ?
-           boost::filesystem::path((sl.has_parent_path() ? sl.parent_path() / L"lib" : L"lib").native() +
-                                   sl.filename().native()) :
-           sl);
+      (std::strncmp(lib_path.filename().string().c_str(), "lib", 3) != 0 ?
+           boost::filesystem::path((lib_path.has_parent_path() ? lib_path.parent_path() / L"lib" : L"lib").native() +
+                                   lib_path.filename().native()) :
+           lib_path);
 
   actual_path += boost::dll::shared_library::suffix();
   return actual_path.string();

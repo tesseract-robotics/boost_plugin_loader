@@ -1,0 +1,43 @@
+name: Ubuntu [Focal, Jammy, Noble]
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+  release:
+    types:
+      - released
+
+jobs:
+  ci:
+    name: ${{ matrix.distro }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [focal, jammy, noble]
+    container:
+      image: ubuntu:${{ matrix.distro }}
+      env:
+        CCACHE_DIR: ${{ github.workspace }}/${{ matrix.distro }}/.ccache
+        DEBIAN_FRONTEND: noninteractive
+        TZ: Etc/UTC
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: target_ws/src
+
+      - name: Build and Tests
+        uses: tesseract-robotics/colcon-action@v9
+        with:
+          before-script: 'apt install -y -qq clang-tidy lcov'
+          ccache-prefix: ${{ matrix.distro }}
+          add-ros-ppa: true
+          vcs-file: dependencies.repos
+          target-path: target_ws/src
+          target-args: --cmake-args -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON
