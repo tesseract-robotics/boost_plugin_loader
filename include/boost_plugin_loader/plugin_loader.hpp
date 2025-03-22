@@ -19,12 +19,16 @@
 #ifndef BOOST_PLUGIN_LOADER_PLUGIN_LOADER_HPP
 #define BOOST_PLUGIN_LOADER_PLUGIN_LOADER_HPP
 
+// STD
+#include <sstream>
+
+// Boost
 #include <boost/core/demangle.hpp>
 #include <boost/dll/import.hpp>
 #include <boost/dll/runtime_symbol_info.hpp>
-#include <boost/algorithm/string.hpp>
-#include <sstream>
+#include <boost/version.hpp>
 
+// Boost Plugin Loader
 #include <boost_plugin_loader/plugin_loader.h>
 #include <boost_plugin_loader/utils.h>
 
@@ -44,7 +48,7 @@ static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol
                                                        const std::string& library_directory = "")
 {
   // Get library
-  boost::dll::shared_library lib = loadLibrary(library_name, library_directory);
+  const boost::dll::shared_library lib = loadLibrary(library_name, library_directory);
 
   // Check if library has symbol
   if (!lib.has(symbol_name))
@@ -65,20 +69,19 @@ void PluginLoader::reportErrorCommon(std::ostream& msg, const std::string& plugi
                                      const std::set<std::string>& search_libraries) const
 {
   const std::string plugin_base_type = boost::core::demangle(typeid(PluginBase).name());
-  msg << "Failed to create plugin instance '" << plugin_name << "' of type '" << plugin_base_type << "'" << std::endl;
-  msg << "Search Paths " << std::string(search_system_folders ? "(including " : "(not including ") << "system folders)"
-      << std::endl;
+  msg << "Failed to create plugin instance '" << plugin_name << "' of type '" << plugin_base_type << "'\n";
+  msg << "Search Paths " << std::string(search_system_folders ? "(including " : "(not including ") << "system folders)\n";
 
   for (const auto& path : search_paths)
-    msg << "    - " + path << std::endl;
+    msg << "    - " + path << "\n";
 
-  msg << "Search Libraries:" << std::endl;
+  msg << "Search Libraries:\n";
   for (const auto& library : search_libraries)
-    msg << "    - " + decorate(library) << std::endl;
+    msg << "    - " + decorate(library) << "\n";
 }
 
 template <typename PluginBase>
-typename std::enable_if<!has_getSection<PluginBase>::value, void>::type
+typename std::enable_if_t<!has_getSection<PluginBase>::value, void>
 PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
                           const std::set<std::string>& search_paths,
                           const std::set<std::string>& search_libraries) const
@@ -87,7 +90,7 @@ PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, boo
 }
 
 template <typename PluginBase>
-typename std::enable_if<has_getSection<PluginBase>::value, void>::type
+typename std::enable_if_t<has_getSection<PluginBase>::value, void>
 PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
                           const std::set<std::string>& search_paths,
                           const std::set<std::string>& search_libraries) const
@@ -97,9 +100,9 @@ PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, boo
   // Add information about the available plugins
   const std::string plugin_base_type = boost::core::demangle(typeid(PluginBase).name());
   auto plugins = getAvailablePlugins(PluginBase::getSection());
-  msg << "Available plugins of type '" << plugin_base_type << "':" << std::endl;
+  msg << "Available plugins of type '" << plugin_base_type << "':\n";
   for (const auto& p : plugins)
-    msg << "    - " + p << std::endl;
+    msg << "    - " + p << "\n";
 }
 
 template <class PluginBase>
@@ -111,7 +114,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  const std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
     if (isSymbolAvailable(plugin_name, library_fullpath))
@@ -119,7 +122,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   }
 
   // Check for environment variable for search paths
-  std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
+  const std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   for (const auto& path : search_paths_local)
   {
     for (const auto& library : library_names)
@@ -164,7 +167,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  const std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
     if (isSymbolAvailable(plugin_name, library_fullpath))
@@ -172,7 +175,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   }
 
   // Check for environment variable to override default library
-  std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
+  const std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   for (const auto& path : search_paths_local)
   {
     for (const auto& library : library_names)
@@ -196,7 +199,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
 }
 
 template <class PluginBase>
-typename std::enable_if<has_getSection<PluginBase>::value, std::vector<std::string>>::type
+typename std::enable_if_t<has_getSection<PluginBase>::value, std::vector<std::string>>
 PluginLoader::getAvailablePlugins() const
 {
   return getAvailablePlugins(PluginBase::getSection());
@@ -212,7 +215,7 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  const std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
     std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, library_fullpath);
@@ -239,7 +242,7 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
         std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, library, path);
         plugins.insert(plugins.end(), lib_plugins.begin(), lib_plugins.end());
       }
-      catch (const std::exception& /*ex*/)
+      catch (const std::exception& /*ex*/) // NOLINT
       {
       }
     }
@@ -258,7 +261,7 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  const std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
     std::vector<std::string> lib_sections = getAllAvailableSections(library_fullpath, "", include_hidden);
@@ -266,7 +269,7 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   }
 
   // Check for environment variable to override default library
-  std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
+  const std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   for (const auto& path : search_paths_local)
   {
     for (const auto& library : library_names)
@@ -276,7 +279,7 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
         std::vector<std::string> lib_sections = getAllAvailableSections(library, path, include_hidden);
         sections.insert(sections.end(), lib_sections.begin(), lib_sections.end());
       }
-      catch (const std::exception& /*ex*/)
+      catch (const std::exception& /*ex*/) // NOLINT
       {
       }
     }
@@ -294,7 +297,7 @@ void PluginLoader::addSymbolLibraryToSearchLibrariesEnv(const void* symbol_ptr, 
     env_var_str = env_var;
   }
 
-  boost::filesystem::path lib_path = boost::filesystem::canonical(boost::dll::symbol_location_ptr(symbol_ptr));
+  const boost::filesystem::path lib_path = boost::filesystem::canonical(boost::dll::symbol_location_ptr(symbol_ptr));
 
   if (env_var_str.empty())
   {

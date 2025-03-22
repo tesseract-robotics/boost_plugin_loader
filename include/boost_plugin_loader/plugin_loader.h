@@ -19,6 +19,7 @@
 #ifndef BOOST_PLUGIN_LOADER_PLUGIN_LOADER_H
 #define BOOST_PLUGIN_LOADER_PLUGIN_LOADER_H
 
+// STD
 #include <set>
 #include <string>
 #include <memory>
@@ -106,7 +107,7 @@ public:
    * class in order to find all implementations of that plugin interface in the libraries containing plugins.
    */
   template <class PluginBase>
-  typename std::enable_if<has_getSection<PluginBase>::value, std::vector<std::string>>::type
+  typename std::enable_if_t<has_getSection<PluginBase>::value, std::vector<std::string>>
   getAvailablePlugins() const;
 
   /**
@@ -162,12 +163,12 @@ protected:
                          const std::set<std::string>& search_libraries) const;
 
   template <typename PluginBase>
-  typename std::enable_if<!has_getSection<PluginBase>::value, void>::type
+  typename std::enable_if_t<!has_getSection<PluginBase>::value, void>
   reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
               const std::set<std::string>& search_paths, const std::set<std::string>& search_libraries) const;
 
   template <typename PluginBase>
-  typename std::enable_if<has_getSection<PluginBase>::value, void>::type
+  typename std::enable_if_t<has_getSection<PluginBase>::value, void>
   reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
               const std::set<std::string>& search_paths, const std::set<std::string>& search_libraries) const;
 };

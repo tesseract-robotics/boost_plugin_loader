@@ -17,13 +17,26 @@
  * limitations under the License.
  */
 
-#include <boost/config.hpp>
-#include <boost/dll/import.hpp>
-#include <boost/dll/alias.hpp>
-#include <boost/dll/import_class.hpp>
+// Boost
+#include <boost/dll/library_info.hpp>
 #include <boost/dll/shared_library.hpp>
-#include <boost/algorithm/string.hpp>
+#include <boost/dll/shared_library_load_mode.hpp>
+#include <boost/algorithm/string/constants.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/system/error_code.hpp>
 
+// STD
+#include <vector>
+#include <string>
+#include <set>
+#include <algorithm>
+#include <cstring>
+#include <cstdlib>
+
+// Boost Plugin Loader
 #include <boost_plugin_loader/utils.h>
 
 namespace boost_plugin_loader
@@ -34,14 +47,14 @@ boost::dll::shared_library loadLibrary(const std::string& library_name, const st
   boost::dll::shared_library lib;
   if (library_directory.empty())
   {
-    boost::filesystem::path sl(library_name);
-    boost::dll::load_mode::type mode =
+    const boost::filesystem::path sl(library_name);
+    const boost::dll::load_mode::type mode =
         boost::dll::load_mode::append_decorations | boost::dll::load_mode::search_system_folders;
     lib = boost::dll::shared_library(sl, ec, mode);
   }
   else
   {
-    boost::filesystem::path sl = boost::filesystem::path(library_directory) / library_name;
+    const boost::filesystem::path sl = boost::filesystem::path(library_directory) / library_name;
     lib = boost::dll::shared_library(sl, ec, boost::dll::load_mode::append_decorations);
   }
 
@@ -92,7 +105,7 @@ std::vector<std::string> getAllAvailableSymbols(const std::string& section, cons
                                                 const std::string& library_directory)
 {
   // Get library
-  boost::dll::shared_library lib = loadLibrary(library_name, library_directory);
+  const boost::dll::shared_library lib = loadLibrary(library_name, library_directory);
 
   // Class `library_info` can extract information from a library
   boost::dll::library_info inf(lib.location());
@@ -105,7 +118,7 @@ std::vector<std::string> getAllAvailableSections(const std::string& library_name
                                                  bool include_hidden)
 {
   // Get library
-  boost::dll::shared_library lib = loadLibrary(library_name, library_directory);
+  const boost::dll::shared_library lib = loadLibrary(library_name, library_directory);
 
   // Class `library_info` can extract information from a library
   boost::dll::library_info inf(lib.location());

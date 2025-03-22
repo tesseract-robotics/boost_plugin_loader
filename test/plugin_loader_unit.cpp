@@ -17,8 +17,21 @@
  * limitations under the License.
  */
 
+// GTest
 #include <gtest/gtest.h>
+
+// STD
+#include <string>
+#include <set>
+#include <vector>
+#include <cstdlib> // NOLINT(misc-include-cleaner)
+
+// Boost
+#include <boost/version.hpp>
+
+// Boost Plugin Loader
 #include <boost_plugin_loader/utils.h>
+#include <boost_plugin_loader/plugin_loader.h>
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include "test_plugin_base.h"
 
@@ -35,7 +48,7 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 #else
     std::string env_var = "UNITTESTENV=a;b;c";
 #endif
-    putenv(env_var.data());
+    putenv(env_var.data()); // NOLINT(misc-include-cleaner)
     std::set<std::string> s = parseEnvironmentVariableList("UNITTESTENV");
     std::vector<std::string> v(s.begin(), s.end());
     EXPECT_EQ(v[0], "a");
@@ -52,7 +65,7 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 #else
     std::string env_var = "UNITTESTENV=a;b;c";
 #endif
-    putenv(env_var.data());
+    putenv(env_var.data()); // NOLINT(misc-include-cleaner)
     std::string search_paths_env = "UNITTESTENV";
     std::set<std::string> existing_search_paths;
     std::set<std::string> s = getAllSearchPaths(search_paths_env, existing_search_paths);
@@ -71,7 +84,7 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 #else
     std::string env_var = "UNITTESTENV=a;b;c";
 #endif
-    putenv(env_var.data());
+    putenv(env_var.data()); // NOLINT(misc-include-cleaner)
     std::string search_paths_env = "UNITTESTENV";
     std::set<std::string> existing_search_paths;
     std::set<std::string> s = getAllLibraryNames(search_paths_env, existing_search_paths);
@@ -255,12 +268,12 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     plugin_loader.search_system_folders = true;
     plugin_loader.search_libraries.insert(std::string(PLUGINS));
 
-    std::vector<std::string> plugins = plugin_loader.getAvailablePlugins("TestBase");
+    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins("TestBase");
     EXPECT_EQ(plugins.size(), 1);
   }
 
   {
-    PluginLoader plugin_loader;
+    const PluginLoader plugin_loader;
     // Behavior change: used to return empty vector but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
     EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins("TestBase"));

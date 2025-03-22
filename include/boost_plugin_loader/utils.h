@@ -19,10 +19,12 @@
 #ifndef BOOST_PLUGIN_LOADER_UTILS_H
 #define BOOST_PLUGIN_LOADER_UTILS_H
 
-#include <memory>
+// STD
 #include <string>
 #include <vector>
 #include <set>
+
+// Boost
 #include <boost/dll/shared_library.hpp>
 
 namespace boost_plugin_loader

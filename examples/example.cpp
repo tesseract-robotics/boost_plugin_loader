@@ -17,9 +17,15 @@
  * limitations under the License.
  */
 #include "plugin.h"
-#include <boost_plugin_loader/plugin_loader.h>
+
+// STD
+#include <string>
+#include <vector>
 #include <iostream>
 #include <cassert>
+
+// Boost Plugin Loader
+#include <boost_plugin_loader/plugin_loader.h>
 
 using boost_plugin_loader::PluginLoader;
 using boost_plugin_loader::Printer;
@@ -31,24 +37,24 @@ int main(int /*argc*/, char** /*argv*/)  // NOLINT
   loader.search_paths.insert(PLUGIN_DIR);
   loader.search_libraries.insert(PLUGINS);
 
-  std::vector<std::string> printer_plugins = loader.getAvailablePlugins<Printer>();
+  const std::vector<std::string> printer_plugins = loader.getAvailablePlugins<Printer>();
   assert(printer_plugins.size() == 2);
 
   for (const std::string& plugin_name : printer_plugins)
   {
-    std::cout << "Loading plugin '" << plugin_name << "'" << std::endl;
-    Printer::Ptr plugin = loader.createInstance<Printer>(plugin_name);
+    std::cout << "Loading plugin '" << plugin_name << "'\n";
+    const Printer::Ptr plugin = loader.createInstance<Printer>(plugin_name);
     assert(plugin != nullptr);
     plugin->operator()();
   }
 
-  std::vector<std::string> shape_plugins = loader.getAvailablePlugins<Shape>();
+  const std::vector<std::string> shape_plugins = loader.getAvailablePlugins<Shape>();
   assert(shape_plugins.size() == 2);
 
   for (const std::string& plugin_name : shape_plugins)
   {
-    std::cout << "Loading plugin '" << plugin_name << "'" << std::endl;
-    Printer::Ptr plugin = loader.createInstance<Printer>(plugin_name);
+    std::cout << "Loading plugin '" << plugin_name << "'\n";
+    const Printer::Ptr plugin = loader.createInstance<Printer>(plugin_name);
     assert(plugin != nullptr);
     plugin->operator()();
   }

@@ -27,7 +27,7 @@ struct ConsolePrinter : public Printer
 public:
   void operator()() const override
   {
-    std::cout << "IMPL: ConsolePrinter" << std::endl;
+    std::cout << "IMPL: ConsolePrinter\n";
   }
 };
 
@@ -36,7 +36,7 @@ struct HelloWorldPrinter : public Printer
 public:
   void operator()() const override
   {
-    std::cout << "IMPL: Hello World" << std::endl;
+    std::cout << "IMPL: Hello World\n";
   }
 };
 
@@ -45,7 +45,7 @@ struct Square : public Shape
 public:
   void operator()() const override
   {
-    std::cout << "IMPL: Square" << std::endl;
+    std::cout << "IMPL: Square\n";
   }
 };
 
@@ -54,7 +54,7 @@ struct Triangle : public Shape
 public:
   void operator()() const override
   {
-    std::cout << "IMPL: Triangle" << std::endl;
+    std::cout << "IMPL: Triangle\n";
   }
 };
 

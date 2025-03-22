@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
+#include "test_plugin_base.h"
 #include "test_plugin_multiply.h"
-#include <boost_plugin_loader/macros.h>
 
 double boost_plugin_loader::TestPluginMultiply::multiply(double x, double y)
 {

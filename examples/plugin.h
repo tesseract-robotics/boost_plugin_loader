@@ -34,6 +34,7 @@ class Printer
 {
 public:
   using Ptr = std::shared_ptr<Printer>;
+  virtual ~Printer() = default;
   virtual void operator()() const = 0;
 
 private:
@@ -47,6 +48,7 @@ class Shape
 {
 public:
   using Ptr = std::shared_ptr<Shape>;
+  virtual ~Shape() = default;
   virtual void operator()() const = 0;
 
 private:
