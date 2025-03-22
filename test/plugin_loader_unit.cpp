@@ -30,7 +30,11 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   const std::string symbol_name = "plugin";
 
   {
+#ifndef _WIN32
     std::string env_var = "UNITTESTENV=a:b:c";
+#else
+    std::string env_var = "UNITTESTENV=a;b;c";
+#endif
     putenv(env_var.data());
     std::set<std::string> s = parseEnvironmentVariableList("UNITTESTENV");
     std::vector<std::string> v(s.begin(), s.end());
@@ -43,7 +47,11 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {  // Test getAllSearchPaths
+#ifndef _WIN32
     std::string env_var = "UNITTESTENV=a:b:c";
+#else
+    std::string env_var = "UNITTESTENV=a;b;c";
+#endif
     putenv(env_var.data());
     std::string search_paths_env = "UNITTESTENV";
     std::set<std::string> existing_search_paths;
@@ -58,7 +66,11 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {  // Test getAllLibraryNames
+#ifndef _WIN32
     std::string env_var = "UNITTESTENV=a:b:c";
+#else
+    std::string env_var = "UNITTESTENV=a;b;c";
+#endif
     putenv(env_var.data());
     std::string search_paths_env = "UNITTESTENV";
     std::set<std::string> existing_search_paths;

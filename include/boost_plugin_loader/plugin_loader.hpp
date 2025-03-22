@@ -21,6 +21,8 @@
 
 #include <boost/core/demangle.hpp>
 #include <boost/dll/import.hpp>
+#include <boost/dll/runtime_symbol_info.hpp>
+#include <boost/algorithm/string.hpp>
 #include <sstream>
 
 #include <boost_plugin_loader/plugin_loader.h>
@@ -108,6 +110,14 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   if (library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
+  // Check for libraries provided as full paths. These are searched first
+  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  for (const auto& library_fullpath : libraries_with_fullpath)
+  {
+    if (isSymbolAvailable(plugin_name, library_fullpath))
+      return createSharedInstance<PluginBase>(plugin_name, library_fullpath);
+  }
+
   // Check for environment variable for search paths
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   for (const auto& path : search_paths_local)
@@ -153,6 +163,14 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   if (library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
+  // Check for libraries provided as full paths. These are searched first
+  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  for (const auto& library_fullpath : libraries_with_fullpath)
+  {
+    if (isSymbolAvailable(plugin_name, library_fullpath))
+      return true;
+  }
+
   // Check for environment variable to override default library
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   for (const auto& path : search_paths_local)
@@ -186,13 +204,22 @@ PluginLoader::getAvailablePlugins() const
 
 std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& section) const
 {
+  std::vector<std::string> plugins;
+
   // Check for environment variable for plugin definitions
   std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
   if (library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
+  // Check for libraries provided as full paths. These are searched first
+  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  for (const auto& library_fullpath : libraries_with_fullpath)
+  {
+    std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, library_fullpath);
+    plugins.insert(plugins.end(), lib_plugins.begin(), lib_plugins.end());
+  }
+
   // Check for environment variable to override default library
-  std::vector<std::string> plugins;
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   if (search_paths_local.empty())
   {
@@ -230,6 +257,14 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   if (library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
+  // Check for libraries provided as full paths. These are searched first
+  std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  for (const auto& library_fullpath : libraries_with_fullpath)
+  {
+    std::vector<std::string> lib_sections = getAllAvailableSections(library_fullpath, "", include_hidden);
+    sections.insert(sections.end(), lib_sections.begin(), lib_sections.end());
+  }
+
   // Check for environment variable to override default library
   std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
   for (const auto& path : search_paths_local)
@@ -248,6 +283,37 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   }
 
   return sections;
+}
+
+void PluginLoader::addSymbolLibraryToSearchLibrariesEnv(const void* symbol_ptr, const std::string& search_libraries_env)
+{
+  std::string env_var_str;
+  char* env_var = std::getenv(search_libraries_env.c_str());
+  if (env_var != nullptr)
+  {
+    env_var_str = env_var;
+  }
+
+  boost::filesystem::path lib_path = boost::filesystem::canonical(boost::dll::symbol_location_ptr(symbol_ptr));
+
+  if (env_var_str.empty())
+  {
+    env_var_str = lib_path.string();
+  }
+  else
+  {
+#ifndef _WIN32
+    env_var_str = env_var_str + ":" + lib_path.string();
+#else
+    env_var_str = env_var_str + ";" + lib_path.string();
+#endif
+  }
+
+#ifndef _WIN32
+  setenv(search_libraries_env.c_str(), env_var_str.c_str(), 1);
+#else
+  _putenv_s(search_libraries_env.c_str(), env_var_str.c_str());
+#endif
 }
 
 int PluginLoader::count() const

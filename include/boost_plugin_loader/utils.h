@@ -54,6 +54,13 @@ bool isSymbolAvailable(const std::string& symbol_name, const std::string& librar
                        const std::string& library_directory = "");
 
 /**
+ * @brief This will remove libraries with full path in the provided library_names and return them.
+ * @param library_names The set to search and remove libraries with full paths
+ * @return A set of the libraries provided as full path
+ */
+std::set<std::string> extractLibrariesWithFullPath(std::set<std::string>& library_names);
+
+/**
  * @brief Get a list of available symbols under the provided section
  * @param section The section to search for available symbols
  * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'

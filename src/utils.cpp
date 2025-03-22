@@ -69,6 +69,25 @@ bool isSymbolAvailable(const std::string& symbol_name, const std::string& librar
   return lib.has(symbol_name);
 }
 
+std::set<std::string> extractLibrariesWithFullPath(std::set<std::string>& library_names)
+{
+  std::set<std::string> libraries_with_fullpath;
+  for (auto it = library_names.begin(); it != library_names.end();)
+  {
+    if (boost::filesystem::exists(*it) && boost::filesystem::path(*it).is_absolute())
+    {
+      libraries_with_fullpath.insert(*it);
+      it = library_names.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
+
+  return libraries_with_fullpath;
+}
+
 std::vector<std::string> getAllAvailableSymbols(const std::string& section, const std::string& library_name,
                                                 const std::string& library_directory)
 {
@@ -134,7 +153,11 @@ std::set<std::string> parseEnvironmentVariableList(const std::string& env_variab
     return list;
 
   std::string evn_str = std::string(env_var);
+#ifndef _WIN32
   boost::split(list, evn_str, boost::is_any_of(":"), boost::token_compress_on);
+#else
+  boost::split(list, evn_str, boost::is_any_of(";"), boost::token_compress_on);
+#endif
   return list;
 }
 
