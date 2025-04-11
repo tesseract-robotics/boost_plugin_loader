@@ -34,6 +34,27 @@
 
 namespace boost_plugin_loader
 {
+
+/**
+ * @brief Separates a set of library paths with mixed path specification into one set with libraries that are specified as fully-defined absolute paths and a second set with libraries that are specified by name only.
+ * @param library_names The set to search and remove libraries with full paths
+ * @return A array containing 1) the set of the libraries specified as fully-defined absolute paths, and 2) the set of remaining libraries specified as library names
+ */
+inline std::array<std::set<std::string>, 2> separateLibraryPathSpecifications(const std::set<std::string> &library_names)
+{
+  std::set<std::string> libraries_with_fullpath;
+  std::set<std::string> libraries_without_fullpath;
+  for (auto it = library_names.begin(); it != library_names.end();)
+  {
+    if (boost::filesystem::exists(*it) && boost::filesystem::path(*it).is_absolute())
+      libraries_with_fullpath.insert(*it);
+    else
+      libraries_without_fullpath.insert(*it);
+  }
+
+  return {libraries_with_fullpath, libraries_without_fullpath};
+}
+
 /**
  * @brief Create a shared instance for the provided symbol_name loaded from the library_name searching system folders
  * for library
@@ -114,12 +135,14 @@ template <class PluginBase>
 std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plugin_name) const
 {
   // Check for environment variable for plugin definitions
-  std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
-  if (library_names.empty())
+  const std::set<std::string> all_library_names = getAllLibraryNames(search_libraries_env, search_libraries);
+  if (all_library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  const std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  const std::array<std::set<std::string>, 2> separated_library_names = separateLibraryPathSpecifications(all_library_names);
+  const std::set<std::string>& libraries_with_fullpath = separated_library_names[0];
+  const std::set<std::string>& library_names = separated_library_names[1];
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
     if (isSymbolAvailable(plugin_name, library_fullpath))
@@ -167,12 +190,14 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
 bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
 {
   // Check for environment variable for plugin definitions
-  std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
-  if (library_names.empty())
+  const std::set<std::string> all_library_names = getAllLibraryNames(search_libraries_env, search_libraries);
+  if (all_library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  const std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  const std::array<std::set<std::string>, 2> separated_library_names = separateLibraryPathSpecifications(all_library_names);
+  const std::set<std::string>& libraries_with_fullpath = separated_library_names[0];
+  const std::set<std::string>& library_names = separated_library_names[1];
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
     if (isSymbolAvailable(plugin_name, library_fullpath))
@@ -215,12 +240,14 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   std::vector<std::string> plugins;
 
   // Check for environment variable for plugin definitions
-  std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
-  if (library_names.empty())
+  const std::set<std::string> all_library_names = getAllLibraryNames(search_libraries_env, search_libraries);
+  if (all_library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  const std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  const std::array<std::set<std::string>, 2> separated_library_names = separateLibraryPathSpecifications(all_library_names);
+  const std::set<std::string>& libraries_with_fullpath = separated_library_names[0];
+  const std::set<std::string>& library_names = separated_library_names[1];
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
     std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, library_fullpath);
@@ -261,12 +288,14 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   std::vector<std::string> sections;
 
   // Check for environment variable for plugin definitions
-  std::set<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
-  if (library_names.empty())
+  const std::set<std::string> all_library_names = getAllLibraryNames(search_libraries_env, search_libraries);
+  if (all_library_names.empty())
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  const std::set<std::string> libraries_with_fullpath = extractLibrariesWithFullPath(library_names);
+  const std::array<std::set<std::string>, 2> separated_library_names = separateLibraryPathSpecifications(all_library_names);
+  const std::set<std::string>& libraries_with_fullpath = separated_library_names[0];
+  const std::set<std::string>& library_names = separated_library_names[1];
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
     std::vector<std::string> lib_sections = getAllAvailableSections(library_fullpath, "", include_hidden);

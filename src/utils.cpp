@@ -25,7 +25,6 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/system/error_code.hpp>
 
 // STD
@@ -44,6 +43,7 @@
 
 namespace boost_plugin_loader
 {
+
 boost::dll::shared_library loadLibrary(boost::dll::fs::error_code& ec, const std::string& library_name, const std::string& library_directory)
 {
   boost::dll::shared_library lib;
@@ -73,25 +73,6 @@ bool isSymbolAvailable(const std::string& symbol_name, const std::string& librar
     return false;
 
   return lib.has(symbol_name);
-}
-
-std::set<std::string> extractLibrariesWithFullPath(std::set<std::string>& library_names)
-{
-  std::set<std::string> libraries_with_fullpath;
-  for (auto it = library_names.begin(); it != library_names.end();)
-  {
-    if (boost::filesystem::exists(*it) && boost::filesystem::path(*it).is_absolute())
-    {
-      libraries_with_fullpath.insert(*it);
-      it = library_names.erase(it);
-    }
-    else
-    {
-      ++it;
-    }
-  }
-
-  return libraries_with_fullpath;
 }
 
 std::vector<std::string> getAllAvailableSymbols(const std::string& section, const std::string& library_name,
@@ -204,4 +185,6 @@ std::set<std::string> getAllLibraryNames(const std::string& search_libraries_env
 
   return existing_search_libraries;
 }
+
+
 }  // namespace boost_plugin_loader
