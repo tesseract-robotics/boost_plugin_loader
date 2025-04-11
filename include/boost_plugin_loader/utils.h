@@ -38,11 +38,12 @@ public:
 
 /**
  * @brief Attempt to load library give library name and directory
+ * @param ec The error code to determine if the library was successfully loaded
  * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
  * @param library_directory The library directory, if empty it will enable search system directories
  * @return A shared library
  */
-boost::dll::shared_library loadLibrary(const std::string& library_name, const std::string& library_directory = "");
+boost::dll::shared_library loadLibrary(boost::dll::fs::error_code& ec, const std::string& library_name, const std::string& library_directory = "");
 
 /**
  * @brief Check if the symbol is available in the library_name searching system folders for library

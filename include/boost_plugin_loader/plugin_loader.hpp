@@ -48,7 +48,12 @@ static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol
                                                        const std::string& library_directory = "")
 {
   // Get library
-  const boost::dll::shared_library lib = loadLibrary(library_name, library_directory);
+  boost::system::error_code ec;
+  const boost::dll::shared_library lib = loadLibrary(ec, library_name, library_directory);
+
+  if (ec)
+    throw PluginLoaderException("Failed to find or load library: " + decorate(library_name, library_directory) +
+                                " with error: " + ec.message());
 
   // Check if library has symbol
   if (!lib.has(symbol_name))
