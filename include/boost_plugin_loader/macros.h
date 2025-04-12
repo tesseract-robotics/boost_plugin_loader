@@ -26,10 +26,12 @@
   extern "C" BOOST_SYMBOL_EXPORT DERIVED_CLASS ALIAS;                                                                  \
   BOOST_DLL_SECTION(SECTION, read) BOOST_DLL_SELECTANY DERIVED_CLASS ALIAS;
 
-#define PLUGIN_ANCHOR_DECL(ANCHOR_NAME)                                                                                \
-  const void* ANCHOR_NAME(); // NOLINT
+#define PLUGIN_ANCHOR_DECL(ANCHOR_NAME) const void* ANCHOR_NAME();  // NOLINT
 
 #define PLUGIN_ANCHOR_IMPL(ANCHOR_NAME)                                                                                \
-  const void* ANCHOR_NAME() { return (const void*)(&ANCHOR_NAME); } // NOLINT
+  const void* ANCHOR_NAME()                                                                                            \
+  {                                                                                                                    \
+    return (const void*)(&ANCHOR_NAME);  // NOLINT                                                                  \
+  }
 
 #endif  // BOOST_PLUGIN_LOADER_MACROS_H

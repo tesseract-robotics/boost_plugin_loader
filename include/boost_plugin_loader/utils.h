@@ -44,8 +44,7 @@ public:
  * @throws If library fails to load
  * @return A shared library
  */
-boost::dll::shared_library loadLibrary(const std::string& library_name,
-                                       const std::string& library_directory = "");
+boost::dll::shared_library loadLibrary(const std::string& library_name, const std::string& library_directory = "");
 
 /**
  * @brief Attempt to load library give library name and directory
@@ -64,8 +63,7 @@ std::optional<boost::dll::shared_library> tryLoadLibrary(const std::string& libr
  * @param library_directory The library directory, if empty it will enable search system directories
  * @return True if the symbol exists, otherwise false
  */
-bool isSymbolAvailable(const std::string& symbol_name,
-                       const std::string& library_name,
+bool isSymbolAvailable(const std::string& symbol_name, const std::string& library_name,
                        const std::string& library_directory = "");
 
 /**
@@ -105,7 +103,8 @@ std::vector<std::string> getAllAvailableSymbols(const std::string& section, cons
  * @param include_hidden Indicate if hidden sections should be included
  * @return A list of sections if they exist.
  */
-std::vector<std::string> getAllAvailableSections(const boost::dll::shared_library& library, bool include_hidden = false);
+std::vector<std::string> getAllAvailableSections(const boost::dll::shared_library& library,
+                                                 bool include_hidden = false);
 
 /**
  * @brief Give library name without prefix and suffix it will return the library name with the prefix and suffix

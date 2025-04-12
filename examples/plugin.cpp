@@ -23,7 +23,7 @@
 
 // Boost Plugin Loader
 #include <boost_plugin_loader/plugin_loader.h>
-#include <boost_plugin_loader/plugin_loader.hpp> // NOLINT(misc-include-cleaner)
+#include <boost_plugin_loader/plugin_loader.hpp>  // NOLINT(misc-include-cleaner)
 
 namespace boost_plugin_loader
 {

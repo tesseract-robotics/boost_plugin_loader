@@ -24,7 +24,7 @@
 #include <string>
 #include <set>
 #include <vector>
-#include <cstdlib> // NOLINT(misc-include-cleaner)
+#include <cstdlib>  // NOLINT(misc-include-cleaner)
 
 // Boost
 #include <boost/version.hpp>
@@ -48,7 +48,7 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 #else
     std::string env_var = "UNITTESTENV=a;b;c";
 #endif
-    putenv(env_var.data()); // NOLINT(misc-include-cleaner)
+    putenv(env_var.data());  // NOLINT(misc-include-cleaner)
     std::set<std::string> s = parseEnvironmentVariableList("UNITTESTENV");
     std::vector<std::string> v(s.begin(), s.end());
     EXPECT_EQ(v[0], "a");
@@ -65,7 +65,7 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 #else
     std::string env_var = "UNITTESTENV=a;b;c";
 #endif
-    putenv(env_var.data()); // NOLINT(misc-include-cleaner)
+    putenv(env_var.data());  // NOLINT(misc-include-cleaner)
     std::string search_paths_env = "UNITTESTENV";
     std::set<std::string> existing_search_paths;
     std::set<std::string> s = getAllSearchPaths(search_paths_env, existing_search_paths);
@@ -84,7 +84,7 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 #else
     std::string env_var = "UNITTESTENV=a;b;c";
 #endif
-    putenv(env_var.data()); // NOLINT(misc-include-cleaner)
+    putenv(env_var.data());  // NOLINT(misc-include-cleaner)
     std::string search_paths_env = "UNITTESTENV";
     std::set<std::string> existing_search_paths;
     std::set<std::string> s = getAllLibraryNames(search_paths_env, existing_search_paths);
@@ -98,16 +98,16 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {
-    std::vector<std::string> sections = getAllAvailableSections(lib_name, lib_dir); // NOLINT
+    std::vector<std::string> sections = getAllAvailableSections(lib_name, lib_dir);  // NOLINT
     EXPECT_EQ(sections.size(), 1);
     EXPECT_EQ(sections.at(0), "TestBase");
 
-    sections = getAllAvailableSections(lib_name, lib_dir, true); // NOLINT
+    sections = getAllAvailableSections(lib_name, lib_dir, true);  // NOLINT
     EXPECT_TRUE(sections.size() > 1);
   }
 
   {
-    std::vector<std::string> symbols = getAllAvailableSymbols("TestBase", lib_name, lib_dir); // NOLINT
+    std::vector<std::string> symbols = getAllAvailableSymbols("TestBase", lib_name, lib_dir);  // NOLINT
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), symbol_name);
   }

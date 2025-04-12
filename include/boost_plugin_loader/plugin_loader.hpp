@@ -34,13 +34,15 @@
 
 namespace boost_plugin_loader
 {
-
 /**
- * @brief Separates a set of library paths with mixed path specification into one set with libraries that are specified as fully-defined absolute paths and a second set with libraries that are specified by name only.
+ * @brief Separates a set of library paths with mixed path specification into one set with libraries that are specified
+ * as fully-defined absolute paths and a second set with libraries that are specified by name only.
  * @param library_names The set to search and remove libraries with full paths
- * @return A tuple containing 1) the set of the libraries specified as fully-defined absolute paths, and 2) the set of remaining libraries specified as library names
+ * @return A tuple containing 1) the set of the libraries specified as fully-defined absolute paths, and 2) the set of
+ * remaining libraries specified as library names
  */
-inline std::tuple<std::set<std::string>, std::set<std::string>> separateLibraryPathSpecifications(const std::set<std::string> &library_names)
+inline std::tuple<std::set<std::string>, std::set<std::string>>
+separateLibraryPathSpecifications(const std::set<std::string>& library_names)
 {
   std::set<std::string> libraries_with_fullpath;
   std::set<std::string> libraries_without_fullpath;
@@ -52,7 +54,7 @@ inline std::tuple<std::set<std::string>, std::set<std::string>> separateLibraryP
       libraries_without_fullpath.insert(library_name);
   }
 
-  return {libraries_with_fullpath, libraries_without_fullpath};
+  return { libraries_with_fullpath, libraries_without_fullpath };
 }
 
 /**
@@ -91,7 +93,8 @@ void PluginLoader::reportErrorCommon(std::ostream& msg, const std::string& plugi
 {
   const std::string plugin_base_type = boost::core::demangle(typeid(PluginBase).name());
   msg << "Failed to create plugin instance '" << plugin_name << "' of type '" << plugin_base_type << "'\n";
-  msg << "Search Paths " << std::string(search_system_folders ? "(including " : "(not including ") << "system folders)\n";
+  msg << "Search Paths " << std::string(search_system_folders ? "(including " : "(not including ")
+      << "system folders)\n";
 
   for (const auto& path : search_paths)
     msg << "    - " << path << "\n";
@@ -248,7 +251,7 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
     // Attempt to load the library
     const std::optional<boost::dll::shared_library> lib = tryLoadLibrary(library_fullpath, "");
 
-            // Skip if the library doesn't exist or cannot be opened
+    // Skip if the library doesn't exist or cannot be opened
     if (!lib.has_value())
       continue;
 
@@ -274,7 +277,7 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
       // Attempt to load the library
       const std::optional<boost::dll::shared_library> lib = tryLoadLibrary(library, path);
 
-              // Skip if the library doesn't exist or cannot be opened
+      // Skip if the library doesn't exist or cannot be opened
       if (!lib.has_value())
         continue;
 

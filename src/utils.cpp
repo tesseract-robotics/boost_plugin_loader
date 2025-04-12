@@ -41,9 +41,7 @@
 
 namespace boost_plugin_loader
 {
-
-boost::dll::shared_library loadLibrary(boost::system::error_code& ec,
-                                       const std::string& library_name,
+boost::dll::shared_library loadLibrary(boost::system::error_code& ec, const std::string& library_name,
                                        const std::string& library_directory)
 {
   boost::dll::shared_library lib;
@@ -63,8 +61,7 @@ boost::dll::shared_library loadLibrary(boost::system::error_code& ec,
   return lib;
 }
 
-boost::dll::shared_library loadLibrary(const std::string& library_name,
-                                       const std::string& library_directory)
+boost::dll::shared_library loadLibrary(const std::string& library_name, const std::string& library_directory)
 {
   boost::system::error_code ec;
   boost::dll::shared_library lib = loadLibrary(ec, library_name, library_directory);
@@ -86,8 +83,7 @@ std::optional<boost::dll::shared_library> tryLoadLibrary(const std::string& libr
   return lib;
 }
 
-bool isSymbolAvailable(const std::string& symbol_name,
-                       const std::string& library_name,
+bool isSymbolAvailable(const std::string& symbol_name, const std::string& library_name,
                        const std::string& library_directory)
 {
   const std::optional<boost::dll::shared_library> lib = tryLoadLibrary(library_name, library_directory);
@@ -98,8 +94,7 @@ bool isSymbolAvailable(const std::string& symbol_name,
   return lib.value().has(symbol_name);
 }
 
-std::vector<std::string> getAllAvailableSymbols(const std::string& section,
-                                                const std::string& library_name,
+std::vector<std::string> getAllAvailableSymbols(const std::string& section, const std::string& library_name,
                                                 const std::string& library_directory)
 {
   // Get library
@@ -107,8 +102,7 @@ std::vector<std::string> getAllAvailableSymbols(const std::string& section,
   return getAllAvailableSymbols(section, lib);
 }
 
-std::vector<std::string> getAllAvailableSections(const std::string& library_name,
-                                                 const std::string& library_directory,
+std::vector<std::string> getAllAvailableSections(const std::string& library_name, const std::string& library_directory,
                                                  bool include_hidden)
 {
   // Get library
@@ -116,8 +110,7 @@ std::vector<std::string> getAllAvailableSections(const std::string& library_name
   return getAllAvailableSections(lib, include_hidden);
 }
 
-std::vector<std::string> getAllAvailableSymbols(const std::string& section,
-                                                const boost::dll::shared_library& library)
+std::vector<std::string> getAllAvailableSymbols(const std::string& section, const boost::dll::shared_library& library)
 {
   // Class `library_info` can extract information from a library
   boost::dll::library_info inf(library.location());
@@ -209,6 +202,5 @@ std::set<std::string> getAllLibraryNames(const std::string& search_libraries_env
 
   return existing_search_libraries;
 }
-
 
 }  // namespace boost_plugin_loader

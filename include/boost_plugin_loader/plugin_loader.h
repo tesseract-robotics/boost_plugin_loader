@@ -107,8 +107,7 @@ public:
    * class in order to find all implementations of that plugin interface in the libraries containing plugins.
    */
   template <class PluginBase>
-  typename std::enable_if_t<has_getSection<PluginBase>::value, std::vector<std::string>>
-  getAvailablePlugins() const;
+  typename std::enable_if_t<has_getSection<PluginBase>::value, std::vector<std::string>> getAvailablePlugins() const;
 
   /**
    * @brief Check if plugin is available
