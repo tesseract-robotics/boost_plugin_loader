@@ -38,18 +38,18 @@ namespace boost_plugin_loader
 /**
  * @brief Separates a set of library paths with mixed path specification into one set with libraries that are specified as fully-defined absolute paths and a second set with libraries that are specified by name only.
  * @param library_names The set to search and remove libraries with full paths
- * @return A array containing 1) the set of the libraries specified as fully-defined absolute paths, and 2) the set of remaining libraries specified as library names
+ * @return A tuple containing 1) the set of the libraries specified as fully-defined absolute paths, and 2) the set of remaining libraries specified as library names
  */
-inline std::array<std::set<std::string>, 2> separateLibraryPathSpecifications(const std::set<std::string> &library_names)
+inline std::tuple<std::set<std::string>, std::set<std::string>> separateLibraryPathSpecifications(const std::set<std::string> &library_names)
 {
   std::set<std::string> libraries_with_fullpath;
   std::set<std::string> libraries_without_fullpath;
-  for (auto it = library_names.begin(); it != library_names.end();)
+  for (const auto& library_name : library_names)
   {
-    if (boost::filesystem::exists(*it) && boost::filesystem::path(*it).is_absolute())
-      libraries_with_fullpath.insert(*it);
+    if (boost::filesystem::exists(library_name) && boost::filesystem::path(library_name).is_absolute())
+      libraries_with_fullpath.insert(library_name);
     else
-      libraries_without_fullpath.insert(*it);
+      libraries_without_fullpath.insert(library_name);
   }
 
   return {libraries_with_fullpath, libraries_without_fullpath};
@@ -69,12 +69,7 @@ static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol
                                                        const std::string& library_directory = "")
 {
   // Get library
-  boost::system::error_code ec;
-  const boost::dll::shared_library lib = loadLibrary(ec, library_name, library_directory);
-
-  if (ec)
-    throw PluginLoaderException("Failed to find or load library: " + decorate(library_name, library_directory) +
-                                " with error: " + ec.message());
+  const boost::dll::shared_library lib = loadLibrary(library_name, library_directory);
 
   // Check if library has symbol
   if (!lib.has(symbol_name))
@@ -99,11 +94,11 @@ void PluginLoader::reportErrorCommon(std::ostream& msg, const std::string& plugi
   msg << "Search Paths " << std::string(search_system_folders ? "(including " : "(not including ") << "system folders)\n";
 
   for (const auto& path : search_paths)
-    msg << "    - " + path << "\n";
+    msg << "    - " << path << "\n";
 
   msg << "Search Libraries:\n";
   for (const auto& library : search_libraries)
-    msg << "    - " + decorate(library) << "\n";
+    msg << "    - " << decorate(library) << "\n";
 }
 
 template <typename PluginBase>
@@ -128,7 +123,7 @@ PluginLoader::reportError(std::ostream& msg, const std::string& plugin_name, boo
   auto plugins = getAvailablePlugins(PluginBase::getSection());
   msg << "Available plugins of type '" << plugin_base_type << "':\n";
   for (const auto& p : plugins)
-    msg << "    - " + p << "\n";
+    msg << "    - " << p << "\n";
 }
 
 template <class PluginBase>
@@ -140,9 +135,9 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  const std::array<std::set<std::string>, 2> separated_library_names = separateLibraryPathSpecifications(all_library_names);
-  const std::set<std::string>& libraries_with_fullpath = separated_library_names[0];
-  const std::set<std::string>& library_names = separated_library_names[1];
+  std::set<std::string> libraries_with_fullpath;
+  std::set<std::string> library_names;
+  std::tie(libraries_with_fullpath, library_names) = separateLibraryPathSpecifications(all_library_names);
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
     if (isSymbolAvailable(plugin_name, library_fullpath))
@@ -195,9 +190,9 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  const std::array<std::set<std::string>, 2> separated_library_names = separateLibraryPathSpecifications(all_library_names);
-  const std::set<std::string>& libraries_with_fullpath = separated_library_names[0];
-  const std::set<std::string>& library_names = separated_library_names[1];
+  std::set<std::string> libraries_with_fullpath;
+  std::set<std::string> library_names;
+  std::tie(libraries_with_fullpath, library_names) = separateLibraryPathSpecifications(all_library_names);
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
     if (isSymbolAvailable(plugin_name, library_fullpath))
@@ -245,12 +240,19 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  const std::array<std::set<std::string>, 2> separated_library_names = separateLibraryPathSpecifications(all_library_names);
-  const std::set<std::string>& libraries_with_fullpath = separated_library_names[0];
-  const std::set<std::string>& library_names = separated_library_names[1];
+  std::set<std::string> libraries_with_fullpath;
+  std::set<std::string> library_names;
+  std::tie(libraries_with_fullpath, library_names) = separateLibraryPathSpecifications(all_library_names);
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
-    std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, library_fullpath);
+    // Attempt to load the library
+    const std::optional<boost::dll::shared_library> lib = tryLoadLibrary(library_fullpath, "");
+
+            // Skip if the library doesn't exist or cannot be opened
+    if (!lib.has_value())
+      continue;
+
+    std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, lib.value());
     plugins.insert(plugins.end(), lib_plugins.begin(), lib_plugins.end());
   }
 
@@ -269,14 +271,15 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   {
     for (const auto& library : library_names)
     {
-      try
-      {
-        std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, library, path);
-        plugins.insert(plugins.end(), lib_plugins.begin(), lib_plugins.end());
-      }
-      catch (const std::exception& /*ex*/) // NOLINT
-      {
-      }
+      // Attempt to load the library
+      const std::optional<boost::dll::shared_library> lib = tryLoadLibrary(library, path);
+
+              // Skip if the library doesn't exist or cannot be opened
+      if (!lib.has_value())
+        continue;
+
+      std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, lib.value());
+      plugins.insert(plugins.end(), lib_plugins.begin(), lib_plugins.end());
     }
   }
 
@@ -293,12 +296,19 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
     throw PluginLoaderException("No plugin libraries were provided!");
 
   // Check for libraries provided as full paths. These are searched first
-  const std::array<std::set<std::string>, 2> separated_library_names = separateLibraryPathSpecifications(all_library_names);
-  const std::set<std::string>& libraries_with_fullpath = separated_library_names[0];
-  const std::set<std::string>& library_names = separated_library_names[1];
+  std::set<std::string> libraries_with_fullpath;
+  std::set<std::string> library_names;
+  std::tie(libraries_with_fullpath, library_names) = separateLibraryPathSpecifications(all_library_names);
   for (const auto& library_fullpath : libraries_with_fullpath)
   {
-    std::vector<std::string> lib_sections = getAllAvailableSections(library_fullpath, "", include_hidden);
+    // Attempt to load the library
+    const std::optional<boost::dll::shared_library> lib = tryLoadLibrary(library_fullpath, "");
+
+    // Skip if the library doesn't exist or cannot be opened
+    if (!lib.has_value())
+      continue;
+
+    std::vector<std::string> lib_sections = getAllAvailableSections(lib.value(), include_hidden);
     sections.insert(sections.end(), lib_sections.begin(), lib_sections.end());
   }
 
@@ -308,14 +318,15 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   {
     for (const auto& library : library_names)
     {
-      try
-      {
-        std::vector<std::string> lib_sections = getAllAvailableSections(library, path, include_hidden);
-        sections.insert(sections.end(), lib_sections.begin(), lib_sections.end());
-      }
-      catch (const std::exception& /*ex*/) // NOLINT
-      {
-      }
+      // Attempt to load the library
+      const std::optional<boost::dll::shared_library> lib = tryLoadLibrary(library, path);
+
+      // Skip if the library doesn't exist or cannot be opened
+      if (!lib.has_value())
+        continue;
+
+      std::vector<std::string> lib_sections = getAllAvailableSections(lib.value(), include_hidden);
+      sections.insert(sections.end(), lib_sections.begin(), lib_sections.end());
     }
   }
 

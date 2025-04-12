@@ -98,16 +98,16 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {
-    std::vector<std::string> sections = getAllAvailableSections(lib_name, lib_dir);
+    std::vector<std::string> sections = getAllAvailableSections(lib_name, lib_dir); // NOLINT
     EXPECT_EQ(sections.size(), 1);
     EXPECT_EQ(sections.at(0), "TestBase");
 
-    sections = getAllAvailableSections(lib_name, lib_dir, true);
+    sections = getAllAvailableSections(lib_name, lib_dir, true); // NOLINT
     EXPECT_TRUE(sections.size() > 1);
   }
 
   {
-    std::vector<std::string> symbols = getAllAvailableSymbols("TestBase", lib_name, lib_dir);
+    std::vector<std::string> symbols = getAllAvailableSymbols("TestBase", lib_name, lib_dir); // NOLINT
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), symbol_name);
   }

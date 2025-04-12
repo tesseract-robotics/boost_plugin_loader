@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <optional>
 
 // Boost
 #include <boost/dll/shared_library.hpp>
@@ -37,13 +38,23 @@ public:
 };
 
 /**
+ * @brief Load library give library name and directory
+ * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
+ * @param library_directory The library directory, if empty it will enable search system directories
+ * @throws If library fails to load
+ * @return A shared library
+ */
+boost::dll::shared_library loadLibrary(const std::string& library_name,
+                                       const std::string& library_directory = "");
+
+/**
  * @brief Attempt to load library give library name and directory
- * @param ec The error code to determine if the library was successfully loaded
  * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
  * @param library_directory The library directory, if empty it will enable search system directories
  * @return A shared library
  */
-boost::dll::shared_library loadLibrary(boost::dll::fs::error_code& ec, const std::string& library_name, const std::string& library_directory = "");
+std::optional<boost::dll::shared_library> tryLoadLibrary(const std::string& library_name,
+                                                         const std::string& library_directory = "");
 
 /**
  * @brief Check if the symbol is available in the library_name searching system folders for library
@@ -53,7 +64,8 @@ boost::dll::shared_library loadLibrary(boost::dll::fs::error_code& ec, const std
  * @param library_directory The library directory, if empty it will enable search system directories
  * @return True if the symbol exists, otherwise false
  */
-bool isSymbolAvailable(const std::string& symbol_name, const std::string& library_name,
+bool isSymbolAvailable(const std::string& symbol_name,
+                       const std::string& library_name,
                        const std::string& library_directory = "");
 
 /**
@@ -61,20 +73,39 @@ bool isSymbolAvailable(const std::string& symbol_name, const std::string& librar
  * @param section The section to search for available symbols
  * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
  * @param library_directory The library directory, if empty it will enable search system directories
+ * @throws If library fails to be found or load
  * @return A list of symbols if they exist.
  */
-std::vector<std::string> getAllAvailableSymbols(const std::string& section, const std::string& library_name,
-                                                const std::string& library_directory = "");
+[[deprecated]] std::vector<std::string> getAllAvailableSymbols(const std::string& section,
+                                                               const std::string& library_name,
+                                                               const std::string& library_directory = "");
 
 /**
  * @brief Get a list of available sections
  * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
  * @param library_directory The library directory, if empty it will enable search system directories
+ * @throws If library fails to be found or load
  * @return A list of sections if they exist.
  */
-std::vector<std::string> getAllAvailableSections(const std::string& library_name,
-                                                 const std::string& library_directory = "",
-                                                 bool include_hidden = false);
+[[deprecated]] std::vector<std::string> getAllAvailableSections(const std::string& library_name,
+                                                                const std::string& library_directory = "",
+                                                                bool include_hidden = false);
+
+/**
+ * @brief Get a list of available symbols under the provided section
+ * @param section The section to search for available symbols
+ * @param library The library to search for available symbols
+ * @return A list of symbols if they exist.
+ */
+std::vector<std::string> getAllAvailableSymbols(const std::string& section, const boost::dll::shared_library& library);
+
+/**
+ * @brief Get a list of available sections
+ * @param library The library to search for available sections
+ * @param include_hidden Indicate if hidden sections should be included
+ * @return A list of sections if they exist.
+ */
+std::vector<std::string> getAllAvailableSections(const boost::dll::shared_library& library, bool include_hidden = false);
 
 /**
  * @brief Give library name without prefix and suffix it will return the library name with the prefix and suffix
