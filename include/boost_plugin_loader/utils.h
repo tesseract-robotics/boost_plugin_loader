@@ -38,56 +38,12 @@ public:
 };
 
 /**
- * @brief Load library give library name and directory
- * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
- * @param library_directory The library directory, if empty it will enable search system directories
- * @throws If library fails to load
- * @return A shared library
- */
-boost::dll::shared_library loadLibrary(const std::string& library_name, const std::string& library_directory = "");
-
-/**
  * @brief Attempt to load library give library name and directory
  * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
  * @param library_directory The library directory, if empty it will enable search system directories
  * @return A shared library
  */
-std::optional<boost::dll::shared_library> tryLoadLibrary(const std::string& library_name,
-                                                         const std::string& library_directory = "");
-
-/**
- * @brief Check if the symbol is available in the library_name searching system folders for library
- * @details The symbol name is the alias provide when calling EXPORT_CLASS_SECTIONED
- * @param symbol_name The symbol to create a shared instance of
- * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
- * @param library_directory The library directory, if empty it will enable search system directories
- * @return True if the symbol exists, otherwise false
- */
-bool isSymbolAvailable(const std::string& symbol_name, const std::string& library_name,
-                       const std::string& library_directory = "");
-
-/**
- * @brief Get a list of available symbols under the provided section
- * @param section The section to search for available symbols
- * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
- * @param library_directory The library directory, if empty it will enable search system directories
- * @throws If library fails to be found or load
- * @return A list of symbols if they exist.
- */
-[[deprecated]] std::vector<std::string> getAllAvailableSymbols(const std::string& section,
-                                                               const std::string& library_name,
-                                                               const std::string& library_directory = "");
-
-/**
- * @brief Get a list of available sections
- * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
- * @param library_directory The library directory, if empty it will enable search system directories
- * @throws If library fails to be found or load
- * @return A list of sections if they exist.
- */
-[[deprecated]] std::vector<std::string> getAllAvailableSections(const std::string& library_name,
-                                                                const std::string& library_directory = "",
-                                                                bool include_hidden = false);
+std::optional<boost::dll::shared_library> loadLibrary(const boost::filesystem::path& library_path);
 
 /**
  * @brief Get a list of available symbols under the provided section

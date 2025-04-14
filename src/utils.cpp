@@ -41,73 +41,25 @@
 
 namespace boost_plugin_loader
 {
-boost::dll::shared_library loadLibrary(boost::system::error_code& ec, const std::string& library_name,
-                                       const std::string& library_directory)
+std::optional<boost::dll::shared_library> loadLibrary(const boost::filesystem::path& library_path)
 {
-  boost::dll::shared_library lib;
-  if (library_directory.empty())
+  boost::dll::load_mode::type mode;
+
+  if (!library_path.has_parent_path())
   {
-    const boost::filesystem::path sl(library_name);
-    const boost::dll::load_mode::type mode =
-        boost::dll::load_mode::append_decorations | boost::dll::load_mode::search_system_folders;
-    lib = boost::dll::shared_library(sl, ec, mode);
+    mode = boost::dll::load_mode::append_decorations | boost::dll::load_mode::search_system_folders;
   }
   else
   {
-    const boost::filesystem::path sl = boost::filesystem::path(library_directory) / library_name;
-    lib = boost::dll::shared_library(sl, ec, boost::dll::load_mode::append_decorations);
+    mode = boost::dll::load_mode::append_decorations;
   }
 
-  return lib;
-}
-
-boost::dll::shared_library loadLibrary(const std::string& library_name, const std::string& library_directory)
-{
   boost::system::error_code ec;
-  boost::dll::shared_library lib = loadLibrary(ec, library_name, library_directory);
-  if (ec)
-    throw PluginLoaderException("Failed to find or load library: " + decorate(library_name, library_directory) +
-                                " with error: " + ec.message());
-
-  return lib;
-}
-
-std::optional<boost::dll::shared_library> tryLoadLibrary(const std::string& library_name,
-                                                         const std::string& library_directory)
-{
-  boost::system::error_code ec;
-  boost::dll::shared_library lib = loadLibrary(ec, library_name, library_directory);
+  boost::dll::shared_library lib = boost::dll::shared_library(library_path, ec, mode);
   if (ec)
     return std::nullopt;
 
   return lib;
-}
-
-bool isSymbolAvailable(const std::string& symbol_name, const std::string& library_name,
-                       const std::string& library_directory)
-{
-  const std::optional<boost::dll::shared_library> lib = tryLoadLibrary(library_name, library_directory);
-
-  if (!lib.has_value())
-    return false;
-
-  return lib.value().has(symbol_name);
-}
-
-std::vector<std::string> getAllAvailableSymbols(const std::string& section, const std::string& library_name,
-                                                const std::string& library_directory)
-{
-  // Get library
-  const boost::dll::shared_library lib = loadLibrary(library_name, library_directory);
-  return getAllAvailableSymbols(section, lib);
-}
-
-std::vector<std::string> getAllAvailableSections(const std::string& library_name, const std::string& library_directory,
-                                                 bool include_hidden)
-{
-  // Get library
-  const boost::dll::shared_library lib = loadLibrary(library_name, library_directory);
-  return getAllAvailableSections(lib, include_hidden);
 }
 
 std::vector<std::string> getAllAvailableSymbols(const std::string& section, const boost::dll::shared_library& library)
