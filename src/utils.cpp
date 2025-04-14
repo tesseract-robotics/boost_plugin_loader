@@ -62,7 +62,7 @@ std::optional<boost::dll::shared_library> loadLibrary(const boost::filesystem::p
   return lib;
 }
 
-std::vector<std::string> getAllAvailableSymbols(const std::string& section, const boost::dll::shared_library& library)
+std::vector<std::string> getAllAvailableSymbols(const boost::dll::shared_library& library, const std::string& section)
 {
   // Class `library_info` can extract information from a library
   boost::dll::library_info inf(library.location());

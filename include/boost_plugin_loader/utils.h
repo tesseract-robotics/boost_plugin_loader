@@ -47,11 +47,11 @@ std::optional<boost::dll::shared_library> loadLibrary(const boost::filesystem::p
 
 /**
  * @brief Get a list of available symbols under the provided section
- * @param section The section to search for available symbols
  * @param library The library to search for available symbols
+ * @param section The section to search for available symbols
  * @return A list of symbols if they exist.
  */
-std::vector<std::string> getAllAvailableSymbols(const std::string& section, const boost::dll::shared_library& library);
+std::vector<std::string> getAllAvailableSymbols(const boost::dll::shared_library& library, const std::string& section);
 
 /**
  * @brief Get a list of available sections

@@ -126,7 +126,7 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {
-    std::vector<std::string> symbols = getAllAvailableSymbols("TestBase", lib.value());  // NOLINT
+    std::vector<std::string> symbols = getAllAvailableSymbols(lib.value(), "TestBase");  // NOLINT
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), symbol_name);
   }

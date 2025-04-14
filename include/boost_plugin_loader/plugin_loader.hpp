@@ -240,7 +240,7 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   std::vector<std::string> plugins;
   for (const auto& lib : libraries)
   {
-    std::vector<std::string> lib_plugins = getAllAvailableSymbols(section, lib);
+    std::vector<std::string> lib_plugins = getAllAvailableSymbols(lib, section);
     plugins.insert(plugins.end(), lib_plugins.begin(), lib_plugins.end());
   }
 
