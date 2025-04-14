@@ -98,56 +98,57 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {
-    std::vector<std::string> sections = getAllAvailableSections(lib_name, lib_dir);  // NOLINT
+    std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path("does_not_exist") / lib_name);
+    EXPECT_FALSE(lib.has_value());
+  }
+
+  {
+    std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path(lib_dir) / "does_not_exist");
+    EXPECT_FALSE(lib.has_value());
+  }
+
+  {
+    std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path("does_not_exist") / "does_not_exist");
+    EXPECT_FALSE(lib.has_value());
+  }
+
+  // Load the library
+  std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path(lib_dir) / lib_name);
+  EXPECT_TRUE(lib.has_value());
+
+  {
+    std::vector<std::string> sections = getAllAvailableSections(lib.value());  // NOLINT
     EXPECT_EQ(sections.size(), 1);
     EXPECT_EQ(sections.at(0), "TestBase");
 
-    sections = getAllAvailableSections(lib_name, lib_dir, true);  // NOLINT
+    sections = getAllAvailableSections(lib.value(), true);  // NOLINT
     EXPECT_TRUE(sections.size() > 1);
   }
 
   {
-    std::vector<std::string> symbols = getAllAvailableSymbols("TestBase", lib_name, lib_dir);  // NOLINT
+    std::vector<std::string> symbols = getAllAvailableSymbols("TestBase", lib.value());  // NOLINT
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), symbol_name);
   }
 
   {
-    EXPECT_TRUE(isSymbolAvailable(symbol_name, lib_name, lib_dir));
+    EXPECT_TRUE(lib.value().has(symbol_name));
   }
 
 // For some reason on Ubuntu 18.04 it does not search the current directory when only the library name is provided
 #if BOOST_VERSION > 106800
   {
-    EXPECT_TRUE(isSymbolAvailable(symbol_name, lib_name));
+    EXPECT_TRUE(lib.value().has(symbol_name));
   }
 #endif
 
   {
-    EXPECT_FALSE(isSymbolAvailable(symbol_name, lib_name, "does_not_exist"));
-    EXPECT_FALSE(isSymbolAvailable(symbol_name, "does_not_exist", lib_dir));
-    EXPECT_FALSE(isSymbolAvailable("does_not_exist", lib_name, lib_dir));
+    EXPECT_FALSE(lib.value().has("does_not_exist"));
   }
 
-  {
-    // NOLINTNEXTLINE
-    EXPECT_FALSE(isSymbolAvailable(symbol_name, "does_not_exist"));
-    EXPECT_FALSE(isSymbolAvailable("does_not_exist", lib_name));
-  }
-
-  {
-    // NOLINTNEXTLINE
-    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(symbol_name, lib_name, "does_not_exist"));
-    // NOLINTNEXTLINE
-    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(symbol_name, "does_not_exist", lib_dir));
-    // NOLINTNEXTLINE
-    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>("does_not_exist", lib_name, lib_dir));
-  }
-
-  {
-    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(symbol_name, "does_not_exist"));  // NOLINT
-    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>("does_not_exist", lib_name));     // NOLINT
-  }
+  // Load the plugin
+  EXPECT_NO_THROW(createSharedInstance<TestPluginBase>(symbol_name, lib.value()));
+  EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>("does_not_exist", lib.value()));
 }
 
 TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
@@ -260,7 +261,8 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     plugin_loader.search_libraries.insert(std::string(PLUGINS));
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins("TestBase"));
+    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins("TestBase");
+    EXPECT_EQ(plugins.size(), 0);
   }
 
   {
