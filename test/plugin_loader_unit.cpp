@@ -108,7 +108,8 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {
-    std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path("does_not_exist") / "does_not_exist");
+    std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path("does_not_exist") / "does_not_"
+                                                                                                            "exist");
     EXPECT_FALSE(lib.has_value());
   }
 

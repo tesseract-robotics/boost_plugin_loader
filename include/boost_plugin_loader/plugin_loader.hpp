@@ -44,7 +44,8 @@ namespace boost_plugin_loader
  * @return A shared pointer of the object with the symbol name located in library_name_
  */
 template <class ClassBase>
-static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol_name, const boost::dll::shared_library& lib)
+static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol_name,
+                                                       const boost::dll::shared_library& lib)
 {
   // Check if library has symbol
   if (!lib.has(symbol_name))
@@ -54,7 +55,7 @@ static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol
 #if BOOST_VERSION >= 107600
   boost::shared_ptr<ClassBase> plugin = boost::dll::import_symbol<ClassBase>(lib, symbol_name);
 #else
-  boost::shared_ptr<ClassBase> plugin = boost::dll::import<ClassBase>(lib, symbol_name);
+  boost::shared_ptr<ClassBase> plugin = boost::dll::import <ClassBase>(lib, symbol_name);
 #endif
   return std::shared_ptr<ClassBase>(plugin.get(), [plugin](ClassBase*) mutable { plugin.reset(); });
 }
@@ -62,13 +63,15 @@ static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol
 /**
  * @brief Loads all libraries
  * @details This function first attempts to load the libraries specified as complete, absolute paths.
- * If the provided library name is not an absolute path, then this function searches for the library in each of the provided local search paths.
- * If the provided library name is not an absolute path and does not exist in the local search paths, then this function optionally searches for the library in system directories.
+ * If the provided library name is not an absolute path, then this function searches for the library in each of the
+ * provided local search paths. If the provided library name is not an absolute path and does not exist in the local
+ * search paths, then this function optionally searches for the library in system directories.
  * @param library_names list of library names
  * @param search_paths_local list of local search paths in which to look for plugin libraries
  * @param search_system_folders flag indicating whether to look for plugins in system level folders
  * @return list of libraries with the specified input names that could be found in the specified input directories.
- * Libraries specified with absolute paths will be returned first in the list before libraries found in local paths (but in no particular order in at the front of the list).
+ * Libraries specified with absolute paths will be returned first in the list before libraries found in local paths (but
+ * in no particular order in at the front of the list).
  */
 static std::vector<boost::dll::shared_library> loadLibraries(const std::set<std::string>& library_names,
                                                              const std::set<std::string>& search_paths_local,
@@ -90,14 +93,16 @@ static std::vector<boost::dll::shared_library> loadLibraries(const std::set<std:
         // If the library exists, add it to the output list and continue to the next library name
         if (lib.has_value())
         {
-          // Libraries specified as absolute paths should appear first in the output list, so insert them at the front of the list
+          // Libraries specified as absolute paths should appear first in the output list, so insert them at the front
+          // of the list
           libraries.insert(libraries.begin(), lib.value());
           continue;
         }
       }
     }
 
-    // If the library name is not an absolute path, try finding the library at the path defined as the combination of each local search path and the library name
+    // If the library name is not an absolute path, try finding the library at the path defined as the combination of
+    // each local search path and the library name
     std::optional<boost::dll::shared_library> lib = std::nullopt;
     for (const std::string& search_path : search_paths_local)
     {
@@ -112,7 +117,8 @@ static std::vector<boost::dll::shared_library> loadLibraries(const std::set<std:
       }
     }
 
-    // If the library cannot be found in any of the local search paths, search in the system level directories for the library (if enabled)
+    // If the library cannot be found in any of the local search paths, search in the system level directories for the
+    // library (if enabled)
     if (lib == std::nullopt && search_system_folders)
     {
       lib = loadLibrary(library_name);
@@ -181,12 +187,13 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   const std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
 
   // Load the libraries
-  std::vector<boost::dll::shared_library> libraries = loadLibraries(library_names, search_paths_local, search_system_folders);
+  std::vector<boost::dll::shared_library> libraries =
+      loadLibraries(library_names, search_paths_local, search_system_folders);
 
   // Create an instance of the plugin
   for (const auto& lib : libraries)
   {
-    if(lib.has(plugin_name))
+    if (lib.has(plugin_name))
       return createSharedInstance<PluginBase>(plugin_name, lib);
   }
 
@@ -206,12 +213,13 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   const std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
 
   // Load the libraries
-  std::vector<boost::dll::shared_library> libraries = loadLibraries(library_names, search_paths_local, search_system_folders);
+  std::vector<boost::dll::shared_library> libraries =
+      loadLibraries(library_names, search_paths_local, search_system_folders);
 
   // Check for the symbol name
   for (const auto& lib : libraries)
   {
-    if(lib.has(plugin_name))
+    if (lib.has(plugin_name))
       return true;
   }
 
@@ -236,7 +244,8 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   const std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
 
   // Load the libraries
-  std::vector<boost::dll::shared_library> libraries = loadLibraries(library_names, search_paths_local, search_system_folders);
+  std::vector<boost::dll::shared_library> libraries =
+      loadLibraries(library_names, search_paths_local, search_system_folders);
 
   // Populate the list of plugins
   std::vector<std::string> plugins;
@@ -260,7 +269,8 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   const std::set<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
 
   // Load the libraries
-  std::vector<boost::dll::shared_library> libraries = loadLibraries(library_names, search_paths_local, search_system_folders);
+  std::vector<boost::dll::shared_library> libraries =
+      loadLibraries(library_names, search_paths_local, search_system_folders);
 
   // Populate the list of sections
   std::vector<std::string> sections;
