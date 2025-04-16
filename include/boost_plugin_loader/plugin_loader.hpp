@@ -68,6 +68,7 @@ static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol
  * @param search_paths_local list of local search paths in which to look for plugin libraries
  * @param search_system_folders flag indicating whether to look for plugins in system level folders
  * @return list of libraries with the specified input names that could be found in the specified input directories.
+ * Libraries specified with absolute paths will be returned first in the list before libraries found in local paths (but in no particular order in at the front of the list).
  */
 static std::vector<boost::dll::shared_library> loadLibraries(const std::set<std::string>& library_names,
                                                              const std::set<std::string>& search_paths_local,
@@ -89,7 +90,8 @@ static std::vector<boost::dll::shared_library> loadLibraries(const std::set<std:
         // If the library exists, add it to the output list and continue to the next library name
         if (lib.has_value())
         {
-          libraries.push_back(lib.value());
+          // Libraries specified as absolute paths should appear first in the output list, so insert them at the front of the list
+          libraries.insert(libraries.begin(), lib.value());
           continue;
         }
       }
