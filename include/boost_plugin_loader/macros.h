@@ -28,10 +28,9 @@
 
 #define PLUGIN_ANCHOR_DECL(ANCHOR_NAME) const void* ANCHOR_NAME();  // NOLINT
 
+// clang-format off
 #define PLUGIN_ANCHOR_IMPL(ANCHOR_NAME)                                                                                \
-  const void* ANCHOR_NAME()                                                                                            \
-  {                                                                                                                    \
-    return (const void*)(&ANCHOR_NAME);  // NOLINT                                                                  \
-  }
+  const void* ANCHOR_NAME() { return (const void*)(&ANCHOR_NAME); } // NOLINT
+// clang-format on
 
 #endif  // BOOST_PLUGIN_LOADER_MACROS_H
