@@ -39,7 +39,11 @@ target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost Boost::filesystem ${CM
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${COMPILE_DEFINITIONS})
 target_cxx_version(${PROJECT_NAME} PUBLIC VERSION 17)
 target_clang_tidy(${PROJECT_NAME} ENABLE ${ENABLE_CLANG_TIDY})
-target_code_coverage(${PROJECT_NAME} ALL ENABLE ${ENABLE_CODE_COVERAGE})
+target_code_coverage(
+  ${PROJECT_NAME}
+  PRIVATE
+  ALL
+  ENABLE ${ENABLE_CODE_COVERAGE})
 
 # Build examples
 add_subdirectory(examples)
