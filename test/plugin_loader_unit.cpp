@@ -24,10 +24,13 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <optional>
 #include <cstdlib>  // NOLINT(misc-include-cleaner)
 
 // Boost
 #include <boost/version.hpp>
+#include <boost/dll/shared_library.hpp>
+#include <boost/filesystem/path.hpp>
 
 // Boost Plugin Loader
 #include <boost_plugin_loader/utils.h>
@@ -98,23 +101,28 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {
-    std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path("does_not_exist") / lib_name);
+    const std::optional<boost::dll::shared_library> lib =
+        loadLibrary(boost::filesystem::path("does_not_exist") / lib_name);
     EXPECT_FALSE(lib.has_value());
   }
 
   {
-    std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path(lib_dir) / "does_not_exist");
+    const std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path(lib_dir) / "does_not_"
+                                                                                                         "exist");
     EXPECT_FALSE(lib.has_value());
   }
 
   {
-    std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path("does_not_exist") / "does_not_"
-                                                                                                            "exist");
+    const std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path("does_not_exist") / "does"
+                                                                                                                  "_not"
+                                                                                                                  "_"
+                                                                                                                  "exis"
+                                                                                                                  "t");
     EXPECT_FALSE(lib.has_value());
   }
 
   // Load the library
-  std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path(lib_dir) / lib_name);
+  const std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path(lib_dir) / lib_name);
   EXPECT_TRUE(lib.has_value());
 
   {
@@ -133,23 +141,23 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {
-    EXPECT_TRUE(lib.value().has(symbol_name));
+    EXPECT_TRUE(lib.value().has(symbol_name));  // NOLINT
   }
 
 // For some reason on Ubuntu 18.04 it does not search the current directory when only the library name is provided
 #if BOOST_VERSION > 106800
   {
-    EXPECT_TRUE(lib.value().has(symbol_name));
+    EXPECT_TRUE(lib.value().has(symbol_name));  // NOLINT
   }
 #endif
 
   {
-    EXPECT_FALSE(lib.value().has("does_not_exist"));
+    EXPECT_FALSE(lib.value().has("does_not_exist"));  // NOLINT
   }
 
   // Load the plugin
-  EXPECT_NO_THROW(createSharedInstance<TestPluginBase>(symbol_name, lib.value()));
-  EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>("does_not_exist", lib.value()));
+  EXPECT_NO_THROW(createSharedInstance<TestPluginBase>(symbol_name, lib.value()));        // NOLINT
+  EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>("does_not_exist", lib.value()));  // NOLINT
 }
 
 TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT

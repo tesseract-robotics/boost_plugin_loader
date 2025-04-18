@@ -43,7 +43,7 @@ namespace boost_plugin_loader
 {
 std::optional<boost::dll::shared_library> loadLibrary(const boost::filesystem::path& library_path)
 {
-  boost::dll::load_mode::type mode;
+  boost::dll::load_mode::type mode{ boost::dll::load_mode::type::default_mode };
 
   if (!library_path.has_parent_path())
   {
