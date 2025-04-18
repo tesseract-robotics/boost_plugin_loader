@@ -3,13 +3,13 @@ Plugin loading library based on Boost DLL
 
 [![codecov](https://codecov.io/gh/tesseract-robotics/boost_plugin_loader/branch/main/graph/badge.svg?token=rTx5ziwNlg)](https://codecov.io/gh/tesseract-robotics/boost_plugin_loader)
 
-Platform             | CI Status
----------------------|:---------
-Linux (Focal)        | [![Build Status](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/ubuntu_focal.yml/badge.svg)](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/ubuntu_focal.yml)
-Windows              | [![Build Status](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/windows_2019.yml/badge.svg)](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/windows_2019.yml)
-Lint  (Clang-Format) | [![Build Status](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/clang_format.yml/badge.svg)](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/clang_format.yml)
-Lint  (CMake-Format) | [![Build Status](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/cmake_format.yml/badge.svg)](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/cmake_format.yml)
-Lint  (Clang-Tidy)   | [![Build Status](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/ubuntu_focal.yml/badge.svg)](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/ubuntu_focal.yml)
+Platform                    | CI Status
+----------------------------|:---------
+Linux (Focal, Jammy, Noble) | [![Build Status](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/ubuntu.yml)
+Windows                     | [![Build Status](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/windows_2019.yml/badge.svg)](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/windows_2019.yml)
+Lint  (Clang-Format)        | [![Build Status](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/clang_format.yml/badge.svg)](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/clang_format.yml)
+Lint  (CMake-Format)        | [![Build Status](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/cmake_format.yml/badge.svg)](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/cmake_format.yml)
+Lint  (Clang-Tidy)          | [![Build Status](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/tesseract-robotics/boost_plugin_loader/actions/workflows/ubuntu.yml)
 
 [![Github Issues](https://img.shields.io/github/issues/tesseract-robotics/boost_plugin_loader.svg)](http://github.com/tesseract-robotics/boost_plugin_loader/issues)
 
