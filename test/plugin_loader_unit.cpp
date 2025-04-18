@@ -158,6 +158,7 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 
   // Load the plugin
   EXPECT_NO_THROW(createSharedInstance<TestPluginBase>(lib, symbol_name));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
   EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(lib, "does_not_exist"));
 }
 
