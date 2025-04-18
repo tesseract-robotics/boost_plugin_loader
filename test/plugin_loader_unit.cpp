@@ -193,6 +193,32 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     EXPECT_EQ(symbols.at(0), "plugin");
   }
 
+  {  // Use full path
+    PluginLoader plugin_loader;
+    const std::string full_path = boost_plugin_loader::decorate(std::string(PLUGINS), std::string(PLUGIN_DIR));
+    plugin_loader.search_libraries.insert(full_path);
+
+    EXPECT_TRUE(plugin_loader.isPluginAvailable("plugin"));
+    auto plugin = plugin_loader.createInstance<TestPluginBase>("plugin");
+    EXPECT_TRUE(plugin != nullptr);
+    EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
+
+    std::vector<std::string> sections = plugin_loader.getAvailableSections();
+    EXPECT_EQ(sections.size(), 1);
+    EXPECT_EQ(sections.at(0), "TestBase");
+
+    sections = plugin_loader.getAvailableSections(true);
+    EXPECT_TRUE(sections.size() > 1);
+
+    std::vector<std::string> symbols = plugin_loader.getAvailablePlugins<TestPluginBase>();
+    EXPECT_EQ(symbols.size(), 1);
+    EXPECT_EQ(symbols.at(0), "plugin");
+
+    symbols = plugin_loader.getAvailablePlugins("TestBase");
+    EXPECT_EQ(symbols.size(), 1);
+    EXPECT_EQ(symbols.at(0), "plugin");
+  }
+
 // For some reason on Ubuntu 18.04 it does not search the current directory when only the library name is provided
 #if BOOST_VERSION > 106800
   {
