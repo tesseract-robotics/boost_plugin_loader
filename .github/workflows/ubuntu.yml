@@ -41,3 +41,11 @@ jobs:
           vcs-file: dependencies.repos
           target-path: target_ws/src
           target-args: --cmake-args -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON
+
+      - name: CodeCov
+        if: matrix.distro == 'noble'
+        working-directory: target_ws
+        run: |
+          source install/setup.bash
+          make -C ./build/boost_plugin_loader ccov-all
+          bash <(curl -s https://codecov.io/bash) -t ec6ee46b-1f52-482c-82ef-1aaabc673f8d -s ./build/boost_plugin_loader -f *all-merged.info
