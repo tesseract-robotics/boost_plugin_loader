@@ -25,7 +25,6 @@
 // Boost
 #include <boost/core/demangle.hpp>
 #include <boost/dll/import.hpp>
-#include <boost/dll/runtime_symbol_info.hpp>
 #include <boost/version.hpp>
 
 // Boost Plugin Loader
@@ -274,37 +273,6 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   }
 
   return sections;
-}
-
-void PluginLoader::addSymbolLibraryToSearchLibrariesEnv(const void* symbol_ptr, const std::string& search_libraries_env)
-{
-  std::string env_var_str;
-  char* env_var = std::getenv(search_libraries_env.c_str());
-  if (env_var != nullptr)
-  {
-    env_var_str = env_var;
-  }
-
-  const boost::filesystem::path lib_path = boost::filesystem::canonical(boost::dll::symbol_location_ptr(symbol_ptr));
-
-  if (env_var_str.empty())
-  {
-    env_var_str = lib_path.string();
-  }
-  else
-  {
-#ifndef _WIN32
-    env_var_str = env_var_str + ":" + lib_path.string();
-#else
-    env_var_str = env_var_str + ";" + lib_path.string();
-#endif
-  }
-
-#ifndef _WIN32
-  setenv(search_libraries_env.c_str(), env_var_str.c_str(), 1);
-#else
-  _putenv_s(search_libraries_env.c_str(), env_var_str.c_str());
-#endif
 }
 
 int PluginLoader::count() const
