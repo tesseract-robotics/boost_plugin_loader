@@ -51,7 +51,7 @@ jobs:
           target-args: --cmake-args -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON -DENABLE_CPACK=ON
 
       - name: CodeCov
-        if: matrix.distro == 'noble'
+        if: matrix.distro == 'jammy'
         working-directory: target_ws
         shell: bash
         run: |
