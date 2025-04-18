@@ -12,6 +12,9 @@ on:
     types:
       - released
 
+env:
+  BUILD_TYPE: Debug
+
 jobs:
   ci:
     name: ${{ matrix.distro }}
@@ -32,6 +35,11 @@ jobs:
         with:
           path: target_ws/src
 
+      - name: Set build type to Release
+        if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+        run: |
+          echo "BUILD_TYPE=Release" >> $GITHUB_ENV
+
       - name: Build and Tests
         uses: tesseract-robotics/colcon-action@v11
         with:
@@ -40,12 +48,33 @@ jobs:
           add-ros-ppa: true
           vcs-file: dependencies.repos
           target-path: target_ws/src
-          target-args: --cmake-args -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON
+          target-args: --cmake-args -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON -DENABLE_CPACK=ON
 
       - name: CodeCov
         if: matrix.distro == 'noble'
         working-directory: target_ws
+        shell: bash
         run: |
           source install/setup.bash
           make -C ./build/boost_plugin_loader ccov-all
           bash <(curl -s https://codecov.io/bash) -t ec6ee46b-1f52-482c-82ef-1aaabc673f8d -s ./build/boost_plugin_loader -f *all-merged.info
+
+      - name: Package
+        if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+        working-directory: workspace/build/boost_plugin_loader
+        run: |
+          cpack --config CPackConfig.cmake
+          cp ./*.deb ${{ github.workspace }}/artifacts
+          cp ./*.tar.xz ${{ github.workspace }}/artifacts
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+        with:
+          name: debian_package
+          path: ${{ github.workspace }}/artifacts/*.deb
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+        with:
+          name: archive_package
+          path: ${{ github.workspace }}/artifacts/*.tar.xz
