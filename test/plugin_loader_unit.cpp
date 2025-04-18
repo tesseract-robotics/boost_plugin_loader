@@ -122,42 +122,43 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   // Load the library
-  const std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path(lib_dir) / lib_name);
-  EXPECT_TRUE(lib.has_value());
+  const std::optional<boost::dll::shared_library> lib_opt = loadLibrary(boost::filesystem::path(lib_dir) / lib_name);
+  EXPECT_TRUE(lib_opt.has_value());
+  const boost::dll::shared_library& lib = lib_opt.value();  // NOLINT
 
   {
-    std::vector<std::string> sections = getAllAvailableSections(lib.value());  // NOLINT
+    std::vector<std::string> sections = getAllAvailableSections(lib);
     EXPECT_EQ(sections.size(), 1);
     EXPECT_EQ(sections.at(0), "TestBase");
 
-    sections = getAllAvailableSections(lib.value(), true);  // NOLINT
+    sections = getAllAvailableSections(lib, true);
     EXPECT_TRUE(sections.size() > 1);
   }
 
   {
-    std::vector<std::string> symbols = getAllAvailableSymbols(lib.value(), "TestBase");  // NOLINT
+    std::vector<std::string> symbols = getAllAvailableSymbols(lib, "TestBase");
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), symbol_name);
   }
 
   {
-    EXPECT_TRUE(lib.value().has(symbol_name));  // NOLINT
+    EXPECT_TRUE(lib.has(symbol_name));
   }
 
 // For some reason on Ubuntu 18.04 it does not search the current directory when only the library name is provided
 #if BOOST_VERSION > 106800
   {
-    EXPECT_TRUE(lib.value().has(symbol_name));  // NOLINT
+    EXPECT_TRUE(lib.has(symbol_name));
   }
 #endif
 
   {
-    EXPECT_FALSE(lib.value().has("does_not_exist"));  // NOLINT
+    EXPECT_FALSE(lib.has("does_not_exist"));
   }
 
   // Load the plugin
-  EXPECT_NO_THROW(createSharedInstance<TestPluginBase>(symbol_name, lib.value()));        // NOLINT
-  EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>("does_not_exist", lib.value()));  // NOLINT
+  EXPECT_NO_THROW(createSharedInstance<TestPluginBase>(lib, symbol_name));
+  EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(lib, "does_not_exist"));
 }
 
 TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT

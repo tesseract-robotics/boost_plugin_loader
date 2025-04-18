@@ -38,14 +38,13 @@ namespace boost_plugin_loader
  * @brief Create a shared instance for the provided symbol_name loaded from the library_name searching system folders
  * for library
  * @details The symbol name is the alias provide when calling EXPORT_CLASS_SECTIONED
+ * @param lib The library to search for available symbols
  * @param symbol_name The symbol to create a shared instance of
- * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
- * @param library_directory The library directory, if empty it will enable search system directories
  * @return A shared pointer of the object with the symbol name located in library_name_
  */
 template <class ClassBase>
-static std::shared_ptr<ClassBase> createSharedInstance(const std::string& symbol_name,
-                                                       const boost::dll::shared_library& lib)
+static std::shared_ptr<ClassBase> createSharedInstance(const boost::dll::shared_library& lib,
+                                                       const std::string& symbol_name)
 {
   // Check if library has symbol
   if (!lib.has(symbol_name))
@@ -194,7 +193,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   for (const auto& lib : libraries)
   {
     if (lib.has(plugin_name))
-      return createSharedInstance<PluginBase>(plugin_name, lib);
+      return createSharedInstance<PluginBase>(lib, plugin_name);
   }
 
   std::stringstream msg;
