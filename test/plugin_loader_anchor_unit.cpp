@@ -28,6 +28,7 @@
 // Boost Plugin Loader
 #include <boost_plugin_loader/plugin_loader.h>
 #include <boost_plugin_loader/plugin_loader.hpp>  // NOLINT(misc-include-cleaner)
+#include <boost_plugin_loader/utils.h>
 #include "test_plugin_base.h"
 #include "test_plugin_multiply.h"
 
@@ -36,7 +37,8 @@ TEST(BoostPluginLoaderAnchorUnit, LoadTestPlugin)  // NOLINT
   using boost_plugin_loader::PluginLoader;
   using boost_plugin_loader::TestPluginBase;
 
-  PluginLoader::addSymbolLibraryToSearchLibrariesEnv(boost_plugin_loader::TestPluginMultiplyAnchor(), "UNITTESTENV");
+  boost_plugin_loader::addSymbolLibraryToSearchLibrariesEnv(boost_plugin_loader::TestPluginMultiplyAnchor(), "UNITTESTE"
+                                                                                                             "NV");
   PluginLoader plugin_loader;
   plugin_loader.search_libraries_env = "UNITTESTENV";
 

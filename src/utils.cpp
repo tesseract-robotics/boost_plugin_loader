@@ -19,12 +19,14 @@
 
 // Boost
 #include <boost/dll/library_info.hpp>
+#include <boost/dll/runtime_symbol_info.hpp>
 #include <boost/dll/shared_library.hpp>
 #include <boost/dll/shared_library_load_mode.hpp>
 #include <boost/algorithm/string/constants.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <boost/system/error_code.hpp>
 
 // STD
@@ -157,6 +159,37 @@ std::set<std::string> getAllLibraryNames(const std::string& search_libraries_env
   }
 
   return existing_search_libraries;
+}
+
+void addSymbolLibraryToSearchLibrariesEnv(const void* symbol_ptr, const std::string& search_libraries_env)
+{
+  std::string env_var_str;
+  char* env_var = std::getenv(search_libraries_env.c_str());
+  if (env_var != nullptr)
+  {
+    env_var_str = env_var;
+  }
+
+  const boost::filesystem::path lib_path = boost::filesystem::canonical(boost::dll::symbol_location_ptr(symbol_ptr));
+
+  if (env_var_str.empty())
+  {
+    env_var_str = lib_path.string();
+  }
+  else
+  {
+#ifndef _WIN32
+    env_var_str = env_var_str + ":" + lib_path.string();
+#else
+    env_var_str = env_var_str + ";" + lib_path.string();
+#endif
+  }
+
+#ifndef _WIN32
+  setenv(search_libraries_env.c_str(), env_var_str.c_str(), 1);  // NOLINT(misc-include-cleaner)
+#else
+  _putenv_s(search_libraries_env.c_str(), env_var_str.c_str());  // NOLINT(misc-include-cleaner)
+#endif
 }
 
 }  // namespace boost_plugin_loader
