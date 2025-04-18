@@ -24,6 +24,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 set(COVERAGE_EXCLUDE
+    /*/install/*
+    /*/devel/*
     /usr/*
     /opt/*
     ${CMAKE_CURRENT_LIST_DIR}/test/*

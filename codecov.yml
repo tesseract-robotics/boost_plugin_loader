@@ -1,0 +1,28 @@
+codecov:
+  require_ci_to_pass: yes
+  disable_default_path_fixes: true
+
+fixes:
+  - "/__w/boost_plugin_loader/boost_plugin_loader/target_ws/src/::"
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+  status:
+    project:
+      default:
+        threshold: 0.5%
+
+parsers:
+  gcov:
+    branch_detection:
+      conditional: yes
+      loop: yes
+      method: no
+      macro: no
+
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: no
