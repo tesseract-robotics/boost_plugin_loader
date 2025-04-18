@@ -25,6 +25,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <boost/system/error_code.hpp>
 
 // STD
@@ -100,6 +101,10 @@ std::string decorate(const std::string& library_name, const std::string& library
     lib_path = boost::filesystem::path(library_name);
   else
     lib_path = boost::filesystem::path(library_directory) / library_name;
+
+  // Support when library_name is already full path
+  if (lib_path.is_absolute())
+    return lib_path.string();
 
   boost::filesystem::path actual_path =
       (std::strncmp(lib_path.filename().string().c_str(), "lib", 3) != 0 ?
