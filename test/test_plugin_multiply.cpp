@@ -17,13 +17,22 @@
  * limitations under the License.
  */
 
+#include "test_plugin_base.h"
 #include "test_plugin_multiply.h"
+
+// Boost Plugin Loader
 #include <boost_plugin_loader/macros.h>
 
-double boost_plugin_loader::TestPluginMultiply::multiply(double x, double y)
+namespace boost_plugin_loader
+{
+double TestPluginMultiply::multiply(double x, double y)
 {
   return x * y;
 }
+
+PLUGIN_ANCHOR_IMPL(TestPluginMultiplyAnchor)
+
+}  // namespace boost_plugin_loader
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 EXPORT_TEST_PLUGIN(boost_plugin_loader::TestPluginMultiply, plugin)

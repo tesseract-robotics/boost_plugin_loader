@@ -19,10 +19,13 @@
 #ifndef BOOST_PLUGIN_LOADER_UTILS_H
 #define BOOST_PLUGIN_LOADER_UTILS_H
 
-#include <memory>
+// STD
 #include <string>
 #include <vector>
 #include <set>
+#include <optional>
+
+// Boost
 #include <boost/dll/shared_library.hpp>
 
 namespace boost_plugin_loader
@@ -40,37 +43,23 @@ public:
  * @param library_directory The library directory, if empty it will enable search system directories
  * @return A shared library
  */
-boost::dll::shared_library loadLibrary(const std::string& library_name, const std::string& library_directory = "");
-
-/**
- * @brief Check if the symbol is available in the library_name searching system folders for library
- * @details The symbol name is the alias provide when calling EXPORT_CLASS_SECTIONED
- * @param symbol_name The symbol to create a shared instance of
- * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
- * @param library_directory The library directory, if empty it will enable search system directories
- * @return True if the symbol exists, otherwise false
- */
-bool isSymbolAvailable(const std::string& symbol_name, const std::string& library_name,
-                       const std::string& library_directory = "");
+std::optional<boost::dll::shared_library> loadLibrary(const boost::filesystem::path& library_path);
 
 /**
  * @brief Get a list of available symbols under the provided section
+ * @param library The library to search for available symbols
  * @param section The section to search for available symbols
- * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
- * @param library_directory The library directory, if empty it will enable search system directories
  * @return A list of symbols if they exist.
  */
-std::vector<std::string> getAllAvailableSymbols(const std::string& section, const std::string& library_name,
-                                                const std::string& library_directory = "");
+std::vector<std::string> getAllAvailableSymbols(const boost::dll::shared_library& library, const std::string& section);
 
 /**
  * @brief Get a list of available sections
- * @param library_name The library name to load which does not include the prefix 'lib' or suffix '.so'
- * @param library_directory The library directory, if empty it will enable search system directories
+ * @param library The library to search for available sections
+ * @param include_hidden Indicate if hidden sections should be included
  * @return A list of sections if they exist.
  */
-std::vector<std::string> getAllAvailableSections(const std::string& library_name,
-                                                 const std::string& library_directory = "",
+std::vector<std::string> getAllAvailableSections(const boost::dll::shared_library& library,
                                                  bool include_hidden = false);
 
 /**

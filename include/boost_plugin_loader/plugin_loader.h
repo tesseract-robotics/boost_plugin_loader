@@ -19,8 +19,8 @@
 #ifndef BOOST_PLUGIN_LOADER_PLUGIN_LOADER_H
 #define BOOST_PLUGIN_LOADER_PLUGIN_LOADER_H
 
+// STD
 #include <set>
-#include <unordered_map>
 #include <string>
 #include <memory>
 #include <vector>
@@ -107,8 +107,7 @@ public:
    * class in order to find all implementations of that plugin interface in the libraries containing plugins.
    */
   template <class PluginBase>
-  typename std::enable_if<has_getSection<PluginBase>::value, std::vector<std::string>>::type
-  getAvailablePlugins() const;
+  typename std::enable_if_t<has_getSection<PluginBase>::value, std::vector<std::string>> getAvailablePlugins() const;
 
   /**
    * @brief Check if plugin is available
@@ -131,6 +130,20 @@ public:
   inline std::vector<std::string> getAvailableSections(bool include_hidden = false) const;
 
   /**
+   * @brief Utility function to add library containing symbol to the search env variable
+   *
+   * In some cases the name and location of a library is unknown at runtime, but a symbol can
+   * be linked at compile time. This is true for Python auditwheel distributions. This
+   * utility function will determine the location of the library, and add it to the library search
+   * environment variable so it can be found.
+   *
+   * @param symbol_ptr Pointer to the symbol to find
+   * @param search_libraries_env The environmental variable to modify
+   */
+  static inline void addSymbolLibraryToSearchLibrariesEnv(const void* symbol_ptr,
+                                                          const std::string& search_libraries_env);
+
+  /**
    * @brief The number of plugins stored. The size of plugins variable
    * @return The number of plugins.
    */
@@ -149,12 +162,12 @@ protected:
                          const std::set<std::string>& search_libraries) const;
 
   template <typename PluginBase>
-  typename std::enable_if<!has_getSection<PluginBase>::value, void>::type
+  typename std::enable_if_t<!has_getSection<PluginBase>::value, void>
   reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
               const std::set<std::string>& search_paths, const std::set<std::string>& search_libraries) const;
 
   template <typename PluginBase>
-  typename std::enable_if<has_getSection<PluginBase>::value, void>::type
+  typename std::enable_if_t<has_getSection<PluginBase>::value, void>
   reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
               const std::set<std::string>& search_paths, const std::set<std::string>& search_libraries) const;
 };

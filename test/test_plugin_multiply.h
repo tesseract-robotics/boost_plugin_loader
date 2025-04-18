@@ -21,6 +21,9 @@
 
 #include "test_plugin_base.h"
 
+// Boost Plugin Loader
+#include <boost_plugin_loader/macros.h>
+
 namespace boost_plugin_loader
 {
 class TestPluginMultiply : public TestPluginBase
@@ -34,6 +37,9 @@ public:
   TestPluginMultiply& operator=(TestPluginMultiply&&) = default;
   double multiply(double x, double y) override;
 };
+
+PLUGIN_ANCHOR_DECL(TestPluginMultiplyAnchor)
+
 }  // namespace boost_plugin_loader
 
 #endif  // BOOST_PLUGIN_LOADER_TEST_PLUGIN_SUM_H

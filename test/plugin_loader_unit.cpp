@@ -17,8 +17,24 @@
  * limitations under the License.
  */
 
+// GTest
 #include <gtest/gtest.h>
+
+// STD
+#include <string>
+#include <set>
+#include <vector>
+#include <optional>
+#include <cstdlib>  // NOLINT(misc-include-cleaner)
+
+// Boost
+#include <boost/version.hpp>
+#include <boost/dll/shared_library.hpp>
+#include <boost/filesystem/path.hpp>
+
+// Boost Plugin Loader
 #include <boost_plugin_loader/utils.h>
+#include <boost_plugin_loader/plugin_loader.h>
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include "test_plugin_base.h"
 
@@ -30,8 +46,12 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   const std::string symbol_name = "plugin";
 
   {
+#ifndef _WIN32
     std::string env_var = "UNITTESTENV=a:b:c";
-    putenv(env_var.data());
+#else
+    std::string env_var = "UNITTESTENV=a;b;c";
+#endif
+    putenv(env_var.data());  // NOLINT(misc-include-cleaner)
     std::set<std::string> s = parseEnvironmentVariableList("UNITTESTENV");
     std::vector<std::string> v(s.begin(), s.end());
     EXPECT_EQ(v[0], "a");
@@ -43,8 +63,12 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {  // Test getAllSearchPaths
+#ifndef _WIN32
     std::string env_var = "UNITTESTENV=a:b:c";
-    putenv(env_var.data());
+#else
+    std::string env_var = "UNITTESTENV=a;b;c";
+#endif
+    putenv(env_var.data());  // NOLINT(misc-include-cleaner)
     std::string search_paths_env = "UNITTESTENV";
     std::set<std::string> existing_search_paths;
     std::set<std::string> s = getAllSearchPaths(search_paths_env, existing_search_paths);
@@ -58,8 +82,12 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {  // Test getAllLibraryNames
+#ifndef _WIN32
     std::string env_var = "UNITTESTENV=a:b:c";
-    putenv(env_var.data());
+#else
+    std::string env_var = "UNITTESTENV=a;b;c";
+#endif
+    putenv(env_var.data());  // NOLINT(misc-include-cleaner)
     std::string search_paths_env = "UNITTESTENV";
     std::set<std::string> existing_search_paths;
     std::set<std::string> s = getAllLibraryNames(search_paths_env, existing_search_paths);
@@ -73,56 +101,66 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   }
 
   {
-    std::vector<std::string> sections = getAllAvailableSections(lib_name, lib_dir);
+    const std::optional<boost::dll::shared_library> lib =
+        loadLibrary(boost::filesystem::path("does_not_exist") / lib_name);
+    EXPECT_FALSE(lib.has_value());
+  }
+
+  {
+    const std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path(lib_dir) / "does_not_"
+                                                                                                         "exist");
+    EXPECT_FALSE(lib.has_value());
+  }
+
+  {
+    const std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path("does_not_exist") / "does"
+                                                                                                                  "_not"
+                                                                                                                  "_"
+                                                                                                                  "exis"
+                                                                                                                  "t");
+    EXPECT_FALSE(lib.has_value());
+  }
+
+  // Load the library
+  const std::optional<boost::dll::shared_library> lib_opt = loadLibrary(boost::filesystem::path(lib_dir) / lib_name);
+  EXPECT_TRUE(lib_opt.has_value());
+  const boost::dll::shared_library& lib = lib_opt.value();  // NOLINT
+
+  {
+    std::vector<std::string> sections = getAllAvailableSections(lib);
     EXPECT_EQ(sections.size(), 1);
     EXPECT_EQ(sections.at(0), "TestBase");
 
-    sections = getAllAvailableSections(lib_name, lib_dir, true);
+    sections = getAllAvailableSections(lib, true);
     EXPECT_TRUE(sections.size() > 1);
   }
 
   {
-    std::vector<std::string> symbols = getAllAvailableSymbols("TestBase", lib_name, lib_dir);
+    std::vector<std::string> symbols = getAllAvailableSymbols(lib, "TestBase");
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), symbol_name);
   }
 
   {
-    EXPECT_TRUE(isSymbolAvailable(symbol_name, lib_name, lib_dir));
+    EXPECT_TRUE(lib.has(symbol_name));
   }
 
 // For some reason on Ubuntu 18.04 it does not search the current directory when only the library name is provided
 #if BOOST_VERSION > 106800
   {
-    EXPECT_TRUE(isSymbolAvailable(symbol_name, lib_name));
+    EXPECT_TRUE(lib.has(symbol_name));
   }
 #endif
 
   {
-    EXPECT_FALSE(isSymbolAvailable(symbol_name, lib_name, "does_not_exist"));
-    EXPECT_FALSE(isSymbolAvailable(symbol_name, "does_not_exist", lib_dir));
-    EXPECT_FALSE(isSymbolAvailable("does_not_exist", lib_name, lib_dir));
+    EXPECT_FALSE(lib.has("does_not_exist"));
   }
 
-  {
-    // NOLINTNEXTLINE
-    EXPECT_FALSE(isSymbolAvailable(symbol_name, "does_not_exist"));
-    EXPECT_FALSE(isSymbolAvailable("does_not_exist", lib_name));
-  }
-
-  {
-    // NOLINTNEXTLINE
-    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(symbol_name, lib_name, "does_not_exist"));
-    // NOLINTNEXTLINE
-    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(symbol_name, "does_not_exist", lib_dir));
-    // NOLINTNEXTLINE
-    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>("does_not_exist", lib_name, lib_dir));
-  }
-
-  {
-    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(symbol_name, "does_not_exist"));  // NOLINT
-    EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>("does_not_exist", lib_name));     // NOLINT
-  }
+  // Load the plugin
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+  EXPECT_NO_THROW(createSharedInstance<TestPluginBase>(lib, symbol_name));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+  EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(lib, "does_not_exist"));
 }
 
 TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
@@ -134,6 +172,32 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     PluginLoader plugin_loader;
     plugin_loader.search_paths.insert(std::string(PLUGIN_DIR));
     plugin_loader.search_libraries.insert(std::string(PLUGINS));
+
+    EXPECT_TRUE(plugin_loader.isPluginAvailable("plugin"));
+    auto plugin = plugin_loader.createInstance<TestPluginBase>("plugin");
+    EXPECT_TRUE(plugin != nullptr);
+    EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
+
+    std::vector<std::string> sections = plugin_loader.getAvailableSections();
+    EXPECT_EQ(sections.size(), 1);
+    EXPECT_EQ(sections.at(0), "TestBase");
+
+    sections = plugin_loader.getAvailableSections(true);
+    EXPECT_TRUE(sections.size() > 1);
+
+    std::vector<std::string> symbols = plugin_loader.getAvailablePlugins<TestPluginBase>();
+    EXPECT_EQ(symbols.size(), 1);
+    EXPECT_EQ(symbols.at(0), "plugin");
+
+    symbols = plugin_loader.getAvailablePlugins("TestBase");
+    EXPECT_EQ(symbols.size(), 1);
+    EXPECT_EQ(symbols.at(0), "plugin");
+  }
+
+  {  // Use full path
+    PluginLoader plugin_loader;
+    const std::string full_path = boost_plugin_loader::decorate(std::string(PLUGINS), std::string(PLUGIN_DIR));
+    plugin_loader.search_libraries.insert(full_path);
 
     EXPECT_TRUE(plugin_loader.isPluginAvailable("plugin"));
     auto plugin = plugin_loader.createInstance<TestPluginBase>("plugin");
@@ -235,7 +299,8 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     plugin_loader.search_libraries.insert(std::string(PLUGINS));
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins("TestBase"));
+    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins("TestBase");
+    EXPECT_EQ(plugins.size(), 0);
   }
 
   {
@@ -243,12 +308,12 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     plugin_loader.search_system_folders = true;
     plugin_loader.search_libraries.insert(std::string(PLUGINS));
 
-    std::vector<std::string> plugins = plugin_loader.getAvailablePlugins("TestBase");
+    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins("TestBase");
     EXPECT_EQ(plugins.size(), 1);
   }
 
   {
-    PluginLoader plugin_loader;
+    const PluginLoader plugin_loader;
     // Behavior change: used to return empty vector but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
     EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins("TestBase"));
