@@ -2,8 +2,8 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2025-04-22)
+------------------
 * Add forward declaration header
 * Update badges in readme
 * Add codecov.yml file
