@@ -52,7 +52,7 @@ class SquareFactory : public ShapeFactory
 {
   std::shared_ptr<Shape> create(const std::any& params) const override
   {
-    double width = std::any_cast<double>(params);
+    auto width = std::any_cast<double>(params);
     return std::make_shared<Square>(width);
   }
 };

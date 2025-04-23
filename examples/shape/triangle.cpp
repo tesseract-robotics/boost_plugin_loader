@@ -53,7 +53,7 @@ class TriangleFactory : public ShapeFactory
 {
   std::shared_ptr<Shape> create(const std::any& params) const override
   {
-    double base, height;
+    double base, height;  // NOLINT
     std::tie(base, height) = std::any_cast<std::tuple<double, double>>(params);
     return std::make_shared<Triangle>(base, height);
   }
