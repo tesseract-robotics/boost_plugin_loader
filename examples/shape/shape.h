@@ -55,6 +55,7 @@ class ShapeFactory
 {
 public:
   using Ptr = std::shared_ptr<ShapeFactory>;
+  virtual ~ShapeFactory() = default;
   virtual std::shared_ptr<Shape> create(const std::any& params) const = 0;
 
 private:
