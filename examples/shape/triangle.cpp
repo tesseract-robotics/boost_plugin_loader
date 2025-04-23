@@ -16,51 +16,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "plugin.h"
-
+#include "shape.h"
 #include <iostream>
 
 namespace boost_plugin_loader
 {
-struct ConsolePrinter : public Printer
+/**
+ * @brief Triangle shape implementation
+ */
+class Triangle : public Shape
 {
 public:
-  void operator()() const override
+  Triangle(double b, double h) : base(b), height(h)
   {
-    std::cout << "IMPL: ConsolePrinter\n";
   }
-};
 
-struct HelloWorldPrinter : public Printer
-{
-public:
-  void operator()() const override
-  {
-    std::cout << "IMPL: Hello World\n";
-  }
-};
-
-struct Square : public Shape
-{
-public:
-  void operator()() const override
-  {
-    std::cout << "IMPL: Square\n";
-  }
-};
-
-struct Triangle : public Shape
-{
-public:
   void operator()() const override
   {
     std::cout << "IMPL: Triangle\n";
+  }
+
+  double area() const override
+  {
+    return base * height / 2.0;
+  }
+
+protected:
+  double base;
+  double height;
+};
+
+/**
+ * @brief Triangle plugin factory
+ */
+class TriangleFactory : public ShapeFactory
+{
+  std::shared_ptr<Shape> create(const std::any& params) const override
+  {
+    double base, height;  // NOLINT
+    std::tie(base, height) = std::any_cast<std::tuple<double, double>>(params);
+    return std::make_shared<Triangle>(base, height);
   }
 };
 
 }  // namespace boost_plugin_loader
 
-EXPORT_PRINTER_PLUGIN(boost_plugin_loader::ConsolePrinter, ConsolePrinter)
-EXPORT_PRINTER_PLUGIN(boost_plugin_loader::HelloWorldPrinter, HelloWorldPrinter)
-EXPORT_SHAPE_PLUGIN(boost_plugin_loader::Square, Square)
-EXPORT_SHAPE_PLUGIN(boost_plugin_loader::Triangle, Triangle)
+// Export the factory as the plugin to allow for multiple differently configured instances of the Triangle shape
+EXPORT_SHAPE_PLUGIN(boost_plugin_loader::TriangleFactory, Triangle)

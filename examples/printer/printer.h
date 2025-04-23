@@ -43,24 +43,8 @@ private:
   static std::string getSection();
 };
 
-/** @brief Plugin interface implementation for testing */
-class Shape
-{
-public:
-  using Ptr = std::shared_ptr<Shape>;
-  virtual ~Shape() = default;
-  virtual void operator()() const = 0;
-
-private:
-  friend class PluginLoader;
-  friend struct has_getSection<Shape>;
-  static std::string getSection();
-};
-
 }  // namespace boost_plugin_loader
 
 #include <boost_plugin_loader/macros.h>
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 #define EXPORT_PRINTER_PLUGIN(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, printer)
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-#define EXPORT_SHAPE_PLUGIN(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, shape)
