@@ -27,7 +27,6 @@
 #include <boost/core/demangle.hpp>
 #include <boost/dll/import.hpp>
 #include <boost/version.hpp>
-#include <boost/shared_ptr.hpp>
 
 // Boost Plugin Loader
 #include <boost_plugin_loader/plugin_loader.h>
