@@ -15,7 +15,7 @@ on:
 
 env:
   VCPKG_PKGS: >-
-    boost-dll boost-filesystem
+    boost-dll boost-filesystem boost-algorithm
 
 jobs:
   windows_ci:
