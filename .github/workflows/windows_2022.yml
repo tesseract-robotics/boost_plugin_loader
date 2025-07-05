@@ -16,6 +16,7 @@ on:
 env:
   VCPKG_PKGS: >-
     boost-dll boost-filesystem boost-algorithm
+    boost-smart-ptr
 
 jobs:
   windows_ci:
