@@ -21,6 +21,7 @@
 
 // STD
 #include <sstream>
+#include <algorithm>
 
 // Boost
 #include <boost/core/demangle.hpp>
