@@ -35,17 +35,6 @@ jobs:
         with:
           path: target_ws/src
 
-      - name: Install Depends
-        shell: bash
-        run: |
-          apt update -y
-          apt install -y -qq wget
-          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-${{ matrix.distro }}-17 main" | tee /etc/apt/sources.list.d/llvm-toolchain.list
-          echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-${{ matrix.distro }}-17 main" | tee -a /etc/apt/sources.list.d/llvm-toolchain.list
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.gpg.d/llvm.asc
-          apt update -y
-          apt install -y -qq clang-tidy-17 lcov
-
       - name: Set build type to Release
         if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
         run: |
@@ -58,16 +47,7 @@ jobs:
           add-ros-ppa: true
           vcs-file: dependencies.repos
           target-path: target_ws/src
-          target-args: --cmake-args -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON -DENABLE_CPACK=ON -DCLANG_TIDY_NAMES=clang-tidy-17
-
-      - name: CodeCov
-        if: matrix.distro == 'jammy'
-        working-directory: target_ws
-        shell: bash
-        run: |
-          source install/setup.bash
-          make -C ./build/boost_plugin_loader ccov-all
-          bash <(curl -s https://codecov.io/bash) -t ec6ee46b-1f52-482c-82ef-1aaabc673f8d -s ./build/boost_plugin_loader -f *all-merged.info
+          target-args: --cmake-args -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_TESTING=ON -DENABLE_CPACK=ON
 
       - name: Package
         if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
