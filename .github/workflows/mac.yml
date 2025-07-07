@@ -37,7 +37,7 @@ jobs:
         cache-key: build-macos-14
         token: ${{ github.token }}
     - name: install-depends
-      shell: cmd
+      shell: bash
       run: |
         python3 -m pip install vcstool -q
         python3 -m pip install colcon-common-extensions -q
