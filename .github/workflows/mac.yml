@@ -1,0 +1,67 @@
+name: MacOS
+
+on:
+  push:
+    branches:
+      - main
+      - 'dev**'
+    tags:
+      - '*'
+  pull_request:
+  schedule:
+    - cron: '0 5 * * *'
+
+  # allow manually starting this workflow
+  workflow_dispatch:
+
+env:
+  VCPKG_PKGS: >-
+    boost-dll boost-filesystem boost-algorithm
+    boost-smart-ptr
+
+jobs:
+  macos_ci:
+    name: MacOS
+    runs-on: macos-14
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        path: workspace/src/plugin_loader
+    
+    - name: vcpkg build
+      uses: johnwason/vcpkg-action@v7
+      id: vcpkg
+      with:
+        pkgs: ${{ env.VCPKG_PKGS }}
+        triplet: arm64-osx-dynamic-release
+        cache-key: build-macos-14
+        token: ${{ github.token }}
+    - name: install-depends
+      shell: cmd
+      run: |
+        python3 -m pip install vcstool -q
+        python3 -m pip install colcon-common-extensions -q
+
+    - name: update environment
+      shell: bash
+      run: |
+        echo "DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$GITHUB_WORKSPACE/vcpkg/installed/arm64-osx-dynamic-release/lib" >> "$GITHUB_ENV"
+        echo "CMAKE_PREFIX_PATH=$GITHUB_WORKSPACE\vcpkg\installed\arm64-osx-dynamic-release" >> "$GITHUB_ENV"
+
+    - name: Build and Tests
+      uses: tesseract-robotics/colcon-action@v11
+      with:
+        ccache-prefix: ${{ matrix.distro }}
+        vcs-file: plugin_loader/dependencies.repos
+        upstream-args: --cmake-args -G "Ninja" -DVCPKG_TARGET_TRIPLET=arm64-osx-dynamic-release -DCMAKE_BUILD_TYPE=Release
+        target-path: workspace/src
+        target-args: --cmake-args -G "Ninja" -DVCPKG_TARGET_TRIPLET=arm64-osx-dynamic-release -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DENABLE_CPACK=ON
+
+    - name: Package
+      if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
+      working-directory: workspace/build/boost_plugin_loader
+      run: |
+        cpack --config CPackConfig.cmake
+        cp ./*.nupkg ${{ github.workspace }}/artifacts
+        cp ./*.tar.xz ${{ github.workspace }}/artifacts
+
