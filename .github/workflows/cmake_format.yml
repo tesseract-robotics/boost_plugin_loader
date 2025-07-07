@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 'dev**'
   pull_request:
   schedule:
     - cron: '0 5 * * *'
@@ -13,7 +14,7 @@ jobs:
     name: CMake-Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
 
       - name: Run CMake format
         run: |

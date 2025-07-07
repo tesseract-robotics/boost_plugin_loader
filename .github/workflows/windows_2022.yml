@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 'dev**'
     tags:
       - '*'
   pull_request:
@@ -23,62 +24,44 @@ jobs:
     name: Windows-2022
     runs-on: windows-2022
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         path: workspace/src/plugin_loader
-
-    - name: checkout-vcpkg
-      uses: actions/checkout@v2
-      with:
-        path: vcpkg
-        repository: microsoft/vcpkg
-
-    - name: bootstrap-vcpkg
-      working-directory: vcpkg
-      run: bootstrap-vcpkg.bat
-
-    - name: vcpkg-dry-run
-      working-directory: vcpkg
-      shell: cmd
-      run: |
-        vcpkg install --dry-run --triplet x64-windows ${{ env.VCPKG_PKGS }} > vcpkg_dry_run.txt
-
-    - name: cache-vcpkg-archives
-      if: startsWith(github.ref, 'refs/tags/v') != true
-      id: cache-vcpkg-archives
-      uses: pat-s/always-upload-cache@v3
-      with:
-        path: C:\Users\runneradmin\AppData\Local\vcpkg\archives
-        key: ${{ runner.os }}-x64-vcpkg-${{ hashFiles('vcpkg/vcpkg_dry_run.txt') }}-main
-
-    - name: install-depends
-      shell: cmd
-      run: |
-        vcpkg integrate install
-        python -m pip install vcstool -q
-        python -m pip install colcon-common-extensions -q
-        python -m pip install ninja -q
-        vcpkg install --triplet x64-windows ${{ env.VCPKG_PKGS }}
-
+    
     - name: configure-msvc
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: x64
 
-    - name: build-workspace
-      working-directory: workspace
+    - name: vcpkg build
+      uses: johnwason/vcpkg-action@v7
+      id: vcpkg
+      with:
+        pkgs: ${{ env.VCPKG_PKGS }}
+        triplet: x64-windows-release
+        cache-key: build-windows-2022
+        token: ${{ github.token }}
+    - name: install-depends
       shell: cmd
       run: |
-        vcs import --input "${{ github.workspace }}/workspace/src/plugin_loader/dependencies.repos" src/
-        colcon build --event-handlers console_direct+ --cmake-args -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DENABLE_CPACK=ON
-        if %ERRORLEVEL% GEQ 1 exit 1
+        python -m pip install vcstool -q
+        python -m pip install colcon-common-extensions -q
+        python -m pip install ninja -q
 
-    - name: run-test
-      working-directory: workspace
-      shell: cmd
+    - name: update environment
+      shell: bash
       run: |
-        colcon test --event-handlers console_direct+ --return-code-on-test-failure
-        colcon test-result --verbose
+        echo "PATH=${{ env.PATH }};$GITHUB_WORKSPACE\vcpkg\installed\x64-windows-release\bin" >> "$GITHUB_ENV"
+        echo "CMAKE_PREFIX_PATH=$GITHUB_WORKSPACE\vcpkg\installed\x64-windows-release" >> "$GITHUB_ENV"
+
+    - name: Build and Tests
+      uses: tesseract-robotics/colcon-action@v11
+      with:
+        ccache-prefix: ${{ matrix.distro }}
+        vcs-file: plugin_loader/dependencies.repos
+        upstream-args: --cmake-args -G "Ninja" -DVCPKG_TARGET_TRIPLET=x64-windows-release -DCMAKE_BUILD_TYPE=Release
+        target-path: workspace/src
+        target-args: --cmake-args -G "Ninja" -DVCPKG_TARGET_TRIPLET=x64-windows-release -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DENABLE_CPACK=ON
 
     - name: Package
       if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
