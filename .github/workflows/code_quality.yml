@@ -63,14 +63,14 @@ jobs:
           target-path: target_ws/src
           target-args: --cmake-args ${{ matrix.env.TARGET_CMAKE_ARGS }}
 
-      - name: Upload CodeCov Results
+      - name: CodeCov
         if: matrix.job_type == 'codecov'
+        working-directory: target_ws
         shell: bash
         run: |
-          source $GITHUB_WORKSPACE/target_ws/install/setup.bash
-          cd $GITHUB_WORKSPACE/target_ws
-          colcon build --cmake-target ccov-all
-          bash <(curl -s https://codecov.io/bash) -t 758610a6-d851-4185-a01a-5b9465889b62 -s $GITHUB_WORKSPACE/target_ws/build -f *all-merged.info
+          source install/setup.bash
+          make -C ./build/boost_plugin_loader ccov-all
+          bash <(curl -s https://codecov.io/bash) -t ec6ee46b-1f52-482c-82ef-1aaabc673f8d -s ./build/boost_plugin_loader -f *all-merged.info
 
       - name: Upload coverage artifacts
         if: matrix.job_type == 'codecov'
