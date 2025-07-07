@@ -40,8 +40,8 @@ jobs:
         run: |
           apt update -y
           apt install -y -qq wget
-          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main" | tee /etc/apt/sources.list.d/llvm-toolchain.list
-          echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main" | tee -a /etc/apt/sources.list.d/llvm-toolchain.list
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-${{ matrix.distro }}-17 main" | tee /etc/apt/sources.list.d/llvm-toolchain.list
+          echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-${{ matrix.distro }}-17 main" | tee -a /etc/apt/sources.list.d/llvm-toolchain.list
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.gpg.d/llvm.asc
           apt update -y
           apt install -y -qq clang-tidy-17 lcov
