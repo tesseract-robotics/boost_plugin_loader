@@ -35,6 +35,16 @@ jobs:
         with:
           path: target_ws/src
 
+      - name: Install Depends
+        shell: bash
+        run: |
+          apt update -y
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main" | tee /etc/apt/sources.list.d/llvm-toolchain.list
+          echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main" | tee -a /etc/apt/sources.list.d/llvm-toolchain.list
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.gpg.d/llvm.asc
+          apt update -y
+          apt install -y -qq clang-tidy-17 lcov
+
       - name: Set build type to Release
         if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
         run: |
@@ -43,7 +53,6 @@ jobs:
       - name: Build and Tests
         uses: tesseract-robotics/colcon-action@v11
         with:
-          before-script: 'apt install -y -qq clang-tidy-17 lcov'
           ccache-prefix: ${{ matrix.distro }}
           add-ros-ppa: true
           vcs-file: dependencies.repos
