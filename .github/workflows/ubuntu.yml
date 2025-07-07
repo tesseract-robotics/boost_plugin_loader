@@ -43,12 +43,12 @@ jobs:
       - name: Build and Tests
         uses: tesseract-robotics/colcon-action@v11
         with:
-          before-script: 'apt install -y -qq clang-tidy lcov'
+          before-script: 'apt install -y -qq clang-tidy-17 lcov'
           ccache-prefix: ${{ matrix.distro }}
           add-ros-ppa: true
           vcs-file: dependencies.repos
           target-path: target_ws/src
-          target-args: --cmake-args -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON -DENABLE_CPACK=ON
+          target-args: --cmake-args -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DENABLE_CODE_COVERAGE=ON -DENABLE_CPACK=ON -DCLANG_TIDY_NAMES=clang-tidy-17
 
       - name: CodeCov
         if: matrix.distro == 'jammy'
