@@ -55,11 +55,11 @@ static std::shared_ptr<ClassBase> createSharedInstance(const boost::dll::shared_
   return boost::dll::import_symbol<ClassBase>(lib, symbol_name);
 #else
 #if BOOST_VERSION >= 107600
-boost::shared_ptr<ClassBase> plugin = boost::dll::import_symbol <ClassBase>(lib, symbol_name);
+  boost::shared_ptr<ClassBase> plugin = boost::dll::import_symbol<ClassBase>(lib, symbol_name);
 #else
-boost::shared_ptr<ClassBase> plugin = boost::dll::import <ClassBase>(lib, symbol_name);
+  boost::shared_ptr<ClassBase> plugin = boost::dll::import <ClassBase>(lib, symbol_name);
 #endif
-return std::shared_ptr<ClassBase>(plugin.get(), [plugin](ClassBase*) mutable { plugin.reset(); });
+  return std::shared_ptr<ClassBase>(plugin.get(), [plugin](ClassBase*) mutable { plugin.reset(); });
 #endif
 }
 
