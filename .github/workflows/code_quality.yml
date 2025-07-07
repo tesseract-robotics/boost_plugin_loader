@@ -1,0 +1,81 @@
+name: Code Quality
+
+on:
+  push:
+    branches:
+      - master
+      - 'dev**'
+  pull_request:
+    paths:
+      - 'boost_plugin_loader**'
+      - '.github/workflows/code_quality.yml'
+      - '.clang-tidy'
+  schedule:
+    - cron: '0 5 * * *'
+
+jobs:
+  ci:
+    name: ${{ matrix.job_type }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        job_type: [clang-tidy, codecov]
+        include:
+          - job_type: clang-tidy
+            env:
+              TARGET_CMAKE_ARGS: "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_NAMES=clang-tidy-17"
+          - job_type: codecov
+            env:
+              TARGET_CMAKE_ARGS: "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DENABLE_CODE_COVERAGE=ON "
+    container:
+      image: ubuntu:22.04
+      env:
+        CCACHE_DIR: "$GITHUB_WORKSPACE/${{ matrix.job_type }}/.ccache"
+        DEBIAN_FRONTEND: noninteractive
+        TZ: Etc/UTC
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: target_ws/src
+
+      - name: Install Depends
+        shell: bash
+        run: |
+          apt update
+          apt upgrade -y
+          apt install -y wget
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main" | tee /etc/apt/sources.list.d/llvm-toolchain.list
+          echo "deb-src http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main" | tee -a /etc/apt/sources.list.d/llvm-toolchain.list
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.gpg.d/llvm.asc
+          apt update -y
+          apt install -y clang-tidy-17
+
+      - name: Build and Tests
+        uses: tesseract-robotics/colcon-action@v11
+        with:
+          ccache-prefix: ${{ matrix.distro }}
+          vcs-file: dependencies.repos
+          run-tests: false
+          rosdep-install-args: -iry --skip-keys=libomp-dev
+          upstream-args: --cmake-args -DCMAKE_BUILD_TYPE=Release
+          target-path: target_ws/src
+          target-args: --cmake-args ${{ matrix.env.TARGET_CMAKE_ARGS }}
+
+      - name: Upload CodeCov Results
+        if: matrix.job_type == 'codecov'
+        shell: bash
+        run: |
+          source $GITHUB_WORKSPACE/target_ws/install/setup.bash
+          cd $GITHUB_WORKSPACE/target_ws
+          colcon build --cmake-target ccov-all
+          bash <(curl -s https://codecov.io/bash) -t 758610a6-d851-4185-a01a-5b9465889b62 -s $GITHUB_WORKSPACE/target_ws/build -f *all-merged.info
+
+      - name: Upload coverage artifacts
+        if: matrix.job_type == 'codecov'
+        uses: actions/upload-artifact@v4
+        with:
+          name: codecov-raw-info
+          path: ${{ github.workspace }}/target_ws/build/**/all-merged.info
+          retention-days: 7
