@@ -17,7 +17,7 @@ on:
 env:
   VCPKG_PKGS: >-
     boost-dll boost-filesystem boost-algorithm
-    boost-smart-ptr
+    boost-smart-ptr gtest
 
 jobs:
   macos_ci:
