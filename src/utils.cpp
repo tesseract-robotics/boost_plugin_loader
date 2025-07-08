@@ -88,7 +88,7 @@ std::vector<std::string> getAllAvailableSections(const boost::dll::shared_librar
     if (include_hidden)
       return false;
 
-    return (section.substr(0, 1) == ".");
+    return (section.substr(0, 1) == ".") || (section.substr(0, 2) == "__");
   };
 
   sections.erase(std::remove_if(sections.begin(), sections.end(), search_fn), sections.end());
