@@ -100,13 +100,13 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
     EXPECT_EQ(s.size(), 2);
   }
 
-  #ifndef __APPLE__
+#ifndef __APPLE__
   {
     const std::optional<boost::dll::shared_library> lib =
         loadLibrary(boost::filesystem::path("does_not_exist") / lib_name);
     EXPECT_FALSE(lib.has_value());
   }
-  #endif
+#endif
 
   {
     const std::optional<boost::dll::shared_library> lib = loadLibrary(boost::filesystem::path(lib_dir) / "does_not_"
@@ -239,7 +239,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
   }
 #endif
 
-  #ifndef __APPLE__
+#ifndef __APPLE__
   {
     PluginLoader plugin_loader;
     plugin_loader.search_system_folders = false;
@@ -251,7 +251,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
     EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginBase>("plugin"));
   }
-  #endif
+#endif
 
   {
     PluginLoader plugin_loader;
