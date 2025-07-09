@@ -62,7 +62,7 @@ jobs:
 
       - name: Package
         if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
-        working-directory: workspace/build/boost_plugin_loader
+        working-directory: target_ws/build/boost_plugin_loader
         run: |
           cpack --config CPackConfig.cmake
           cp ./*.deb ${{ github.workspace }}/artifacts
