@@ -49,7 +49,7 @@ jobs:
         echo "CMAKE_PREFIX_PATH=$GITHUB_WORKSPACE\vcpkg\installed\arm64-osx-release" >> "$GITHUB_ENV"
 
     - name: Build and Tests
-      uses: johnwason/colcon-action@macos
+      uses: tesseract-robotics/colcon-action@v13
       with:
         ccache-prefix: ${{ matrix.distro }}
         vcs-file: plugin_loader/dependencies.repos
