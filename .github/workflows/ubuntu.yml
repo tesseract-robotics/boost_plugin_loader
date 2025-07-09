@@ -42,7 +42,7 @@ jobs:
           echo "BUILD_TYPE=Release" >> $GITHUB_ENV
 
       - name: Build and Tests
-        uses: tesseract-robotics/colcon-action@v11
+        uses: tesseract-robotics/colcon-action@v13
         with:
           before-script: 'apt install -y -qq clang-tidy lcov'
           ccache-prefix: ${{ matrix.distro }}
