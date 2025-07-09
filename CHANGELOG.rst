@@ -2,8 +2,8 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.1 (2025-07-09)
+------------------
 * Update to colcon-action v13
 * Add macos CI (`#27 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/27>`_)
 * Update dependencies.repos (`#30 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/30>`_)
