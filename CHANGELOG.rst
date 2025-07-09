@@ -2,6 +2,16 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update to colcon-action v13
+* Add macos CI (`#27 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/27>`_)
+* Update dependencies.repos (`#30 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/30>`_)
+* Fixed shared_ptr type selection in createSharedInstance (`#29 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/29>`_)
+* Fix missing algorithm.h header in plugin_loader.hpp (`#26 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/26>`_)
+* Example update (`#19 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/19>`_)
+* Contributors: John Wason, Levi Armstrong, Michael Ripperger
+
 0.3.0 (2025-04-22)
 ------------------
 * Add forward declaration header
