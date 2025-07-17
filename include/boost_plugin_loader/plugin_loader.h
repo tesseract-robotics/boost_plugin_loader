@@ -30,6 +30,11 @@
   template std::vector<std::string> boost_plugin_loader::PluginLoader::getAvailablePlugins<PluginBase>() const;        \
   template std::shared_ptr<PluginBase> boost_plugin_loader::PluginLoader::createInstance(const std::string&) const;
 
+namespace boost::dll
+{
+class shared_library;
+}
+
 namespace boost_plugin_loader
 {
 /** @brief Used to test for getSection method for getAvailablePlugins */
@@ -156,6 +161,21 @@ protected:
   typename std::enable_if_t<has_getSection<PluginBase>::value, void>
   reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
               const std::set<std::string>& search_paths, const std::set<std::string>& search_libraries) const;
+
+  /**
+   * @brief Checks if the library has the input symbol name, given that the plugin class does not define a section name
+   */
+  template <class ClassBase>
+  typename std::enable_if<!has_getSection<ClassBase>::value, bool>::type
+  hasSymbol(const boost::dll::shared_library& lib, const std::string& symbol_name) const;
+
+  /**
+   * @brief Checks that the library has the input symbol name and that the symbol is associated with the section defined
+   * in the plugin class.
+   */
+  template <class ClassBase>
+  typename std::enable_if<has_getSection<ClassBase>::value, bool>::type hasSymbol(const boost::dll::shared_library& lib,
+                                                                                  const std::string& symbol_name) const;
 };
 
 }  // namespace boost_plugin_loader
