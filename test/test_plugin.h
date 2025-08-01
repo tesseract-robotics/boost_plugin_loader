@@ -16,21 +16,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BOOST_PLUGIN_LOADER_TEST_PLUGIN_BASE_H
-#define BOOST_PLUGIN_LOADER_TEST_PLUGIN_BASE_H
+#ifndef BOOST_PLUGIN_LOADER_TEST_PLUGIN_H
+#define BOOST_PLUGIN_LOADER_TEST_PLUGIN_H
 
 #include <string>
 
 namespace boost_plugin_loader
 {
-class TestPluginBase
+/**
+ * @brief Dummy plugin interface for performing multiplication
+ */
+class TestPluginMultiply
 {
 public:
-  virtual ~TestPluginBase() = default;
+  virtual ~TestPluginMultiply() = default;
   virtual double multiply(double x, double y) = 0;
   static std::string getSection()
   {
-    return "TestBase";
+    return SECTION_MULTIPLY;
   }
 
 protected:
@@ -39,7 +42,17 @@ protected:
 
 }  // namespace boost_plugin_loader
 
-#include <boost_plugin_loader/macros.h>
-#define EXPORT_TEST_PLUGIN(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, TestBase)
+// Macros for converting a non-string target compile definition into a string
+#define STRINGIFY_HELPER(x) #x
+#define STRINGIFY(x) STRINGIFY_HELPER(x)
 
-#endif  // BOOST_PLUGIN_LOADER_TEST_PLUGIN_BASE_H
+/**
+ * @brief Function for getting the symbol name from the target compile definition __SYMBOL_NAME__
+ */
+static inline std::string getSymbolName() { return STRINGIFY(__SYMBOL_NAME__); }
+
+// Create macros to export both plugins with a given alias and with section names defined as target compile definitions
+#include <boost_plugin_loader/macros.h>
+#define EXPORT_TEST_PLUGIN_MULTIPLY(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, SECTION_MULTIPLY)
+
+#endif  // BOOST_PLUGIN_LOADER_TEST_PLUGIN_H

@@ -19,26 +19,26 @@
 #ifndef BOOST_PLUGIN_LOADER_TEST_PLUGIN_SUM_H
 #define BOOST_PLUGIN_LOADER_TEST_PLUGIN_SUM_H
 
-#include "test_plugin_base.h"
+#include "test_plugin.h"
 
 // Boost Plugin Loader
 #include <boost_plugin_loader/macros.h>
 
 namespace boost_plugin_loader
 {
-class TestPluginMultiply : public TestPluginBase
+class TestPluginMultiplyImpl : public TestPluginMultiply
 {
 public:
-  TestPluginMultiply() = default;
-  ~TestPluginMultiply() override = default;
-  TestPluginMultiply(const TestPluginMultiply&) = default;
-  TestPluginMultiply& operator=(const TestPluginMultiply&) = default;
-  TestPluginMultiply(TestPluginMultiply&&) = default;
-  TestPluginMultiply& operator=(TestPluginMultiply&&) = default;
+  TestPluginMultiplyImpl() = default;
+  ~TestPluginMultiplyImpl() override = default;
+  TestPluginMultiplyImpl(const TestPluginMultiplyImpl&) = default;
+  TestPluginMultiplyImpl& operator=(const TestPluginMultiplyImpl&) = default;
+  TestPluginMultiplyImpl(TestPluginMultiplyImpl&&) = default;
+  TestPluginMultiplyImpl& operator=(TestPluginMultiplyImpl&&) = default;
   double multiply(double x, double y) override;
 };
 
-PLUGIN_ANCHOR_DECL(TestPluginMultiplyAnchor)
+PLUGIN_ANCHOR_DECL(TestPluginMultiplyImplAnchor)
 
 }  // namespace boost_plugin_loader
 
