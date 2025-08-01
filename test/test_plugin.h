@@ -19,6 +19,10 @@
 #ifndef BOOST_PLUGIN_LOADER_TEST_PLUGIN_H
 #define BOOST_PLUGIN_LOADER_TEST_PLUGIN_H
 
+// Macros for converting a non-string target compile definition into a string
+#define STRINGIFY_HELPER(x) #x
+#define STRINGIFY(x) STRINGIFY_HELPER(x)
+
 #include <string>
 
 namespace boost_plugin_loader
@@ -33,7 +37,7 @@ public:
   virtual double multiply(double x, double y) = 0;
   static std::string getSection()
   {
-    return SECTION_MULTIPLY;
+    return STRINGIFY(SECTION_MULTIPLY);
   }
 
 protected:
@@ -50,7 +54,7 @@ public:
   virtual double add(double x, double y) = 0;
   static std::string getSection()
   {
-    return SECTION_ADD;
+    return STRINGIFY(SECTION_ADD);
   }
 
 protected:
@@ -59,16 +63,12 @@ protected:
 
 }  // namespace boost_plugin_loader
 
-// Macros for converting a non-string target compile definition into a string
-#define STRINGIFY_HELPER(x) #x
-#define STRINGIFY(x) STRINGIFY_HELPER(x)
-
 /**
  * @brief Function for getting the symbol name from the target compile definition __SYMBOL_NAME__
  */
 static inline std::string getSymbolName()
 {
-  return STRINGIFY(__SYMBOL_NAME__);
+  return STRINGIFY(SYMBOL_NAME);
 }
 
 // Create macros to export both plugins with a given alias and with section names defined as target compile definitions

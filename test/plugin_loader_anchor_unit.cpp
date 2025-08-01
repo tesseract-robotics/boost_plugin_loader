@@ -50,7 +50,7 @@ TEST(BoostPluginLoaderAnchorUnit, LoadTestPlugin)  // NOLINT
 
   std::vector<std::string> sections = plugin_loader.getAvailableSections();
   EXPECT_EQ(sections.size(), 1);
-  EXPECT_EQ(sections.at(0), SECTION_MULTIPLY);
+  EXPECT_EQ(sections.at(0), TestPluginMultiply::getSection());
 
   sections = plugin_loader.getAvailableSections(true);
   EXPECT_TRUE(sections.size() > 1);
@@ -59,7 +59,7 @@ TEST(BoostPluginLoaderAnchorUnit, LoadTestPlugin)  // NOLINT
   EXPECT_EQ(symbols.size(), 1);
   EXPECT_EQ(symbols.at(0), getSymbolName());
 
-  symbols = plugin_loader.getAvailablePlugins(SECTION_MULTIPLY);
+  symbols = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
   EXPECT_EQ(symbols.size(), 1);
   EXPECT_EQ(symbols.at(0), getSymbolName());
 }

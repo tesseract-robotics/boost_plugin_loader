@@ -33,6 +33,6 @@ PLUGIN_ANCHOR_IMPL(TestPluginMultiplyImplAnchor)
 
 }  // namespace boost_plugin_loader
 
-// Export the plugin with an alias defined by the target compile definition __SYMBOL_NAME__
+// Export the plugin with an alias defined by the target compile definition SYMBOL_NAME
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-EXPORT_TEST_PLUGIN_MULTIPLY(boost_plugin_loader::TestPluginMultiplyImpl, __SYMBOL_NAME__)
+EXPORT_TEST_PLUGIN_MULTIPLY(boost_plugin_loader::TestPluginMultiplyImpl, SYMBOL_NAME)

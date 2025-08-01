@@ -130,14 +130,14 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   {
     std::vector<std::string> sections = getAllAvailableSections(lib);
     EXPECT_EQ(sections.size(), 1);
-    EXPECT_EQ(sections.at(0), SECTION_MULTIPLY);
+    EXPECT_EQ(sections.at(0), TestPluginMultiply::getSection());
 
     sections = getAllAvailableSections(lib, true);
     EXPECT_TRUE(sections.size() > 1);
   }
 
   {
-    std::vector<std::string> symbols = getAllAvailableSymbols(lib, SECTION_MULTIPLY);
+    std::vector<std::string> symbols = getAllAvailableSymbols(lib, TestPluginMultiply::getSection());
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), getSymbolName());
   }
@@ -181,7 +181,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
 
     std::vector<std::string> sections = plugin_loader.getAvailableSections();
     EXPECT_EQ(sections.size(), 1);
-    EXPECT_EQ(sections.at(0), SECTION_MULTIPLY);
+    EXPECT_EQ(sections.at(0), TestPluginMultiply::getSection());
 
     sections = plugin_loader.getAvailableSections(true);
     EXPECT_TRUE(sections.size() > 1);
@@ -190,7 +190,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), getSymbolName());
 
-    symbols = plugin_loader.getAvailablePlugins(SECTION_MULTIPLY);
+    symbols = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), getSymbolName());
   }
@@ -207,7 +207,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
 
     std::vector<std::string> sections = plugin_loader.getAvailableSections();
     EXPECT_EQ(sections.size(), 1);
-    EXPECT_EQ(sections.at(0), SECTION_MULTIPLY);
+    EXPECT_EQ(sections.at(0), TestPluginMultiply::getSection());
 
     sections = plugin_loader.getAvailableSections(true);
     EXPECT_TRUE(sections.size() > 1);
@@ -216,7 +216,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), getSymbolName());
 
-    symbols = plugin_loader.getAvailablePlugins(SECTION_MULTIPLY);
+    symbols = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
     EXPECT_EQ(symbols.size(), 1);
     EXPECT_EQ(symbols.at(0), getSymbolName());
   }
@@ -302,7 +302,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins(SECTION_MULTIPLY);
+    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
     EXPECT_EQ(plugins.size(), 0);
   }
 
@@ -311,7 +311,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     plugin_loader.search_system_folders = true;
     plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
 
-    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins(SECTION_MULTIPLY);
+    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
     EXPECT_EQ(plugins.size(), 1);
   }
 
@@ -319,7 +319,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     const PluginLoader plugin_loader;
     // Behavior change: used to return empty vector but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins(SECTION_MULTIPLY));
+    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection()));
     // Behavior change: used to return empty vector but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
     EXPECT_ANY_THROW(plugin_loader.getAvailableSections());
@@ -336,7 +336,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     plugin_loader.search_system_folders = false;
     // Behavior change: used to return empty vector but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins(SECTION_MULTIPLY));
+    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection()));
     // Behavior change: used to return empty vector but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
     EXPECT_ANY_THROW(plugin_loader.getAvailableSections());

@@ -46,6 +46,6 @@ PLUGIN_ANCHOR_IMPL(TestPluginAddImplAnchor)
 
 }  // namespace boost_plugin_loader
 
-// Export the plugin with an alias defined by the target compile definition __SYMBOL_NAME__
+// Export the plugin with an alias defined by the target compile definition SYMBOL_NAME
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-EXPORT_TEST_PLUGIN_ADD(boost_plugin_loader::TestPluginAddImpl, __SYMBOL_NAME__)
+EXPORT_TEST_PLUGIN_ADD(boost_plugin_loader::TestPluginAddImpl, SYMBOL_NAME)

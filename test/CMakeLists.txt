@@ -1,8 +1,8 @@
 find_gtest()
 
-add_library(${PROJECT_NAME}_test_plugin INTERFACE test_plugin.h)
-target_compile_definitions(${PROJECT_NAME}_test_plugin INTERFACE SECTION_MULTIPLY="mult" SECTION_ADD="add"
-                                                                 __SYMBOL_NAME__=plugin)
+add_library(${PROJECT_NAME}_test_plugin INTERFACE)
+target_compile_definitions(${PROJECT_NAME}_test_plugin INTERFACE SECTION_MULTIPLY=mult SECTION_ADD=add
+                                                                 SYMBOL_NAME=plugin)
 
 add_library(${PROJECT_NAME}_test_plugin_multiply test_plugin_multiply.cpp)
 target_link_libraries(${PROJECT_NAME}_test_plugin_multiply PUBLIC ${PROJECT_NAME} ${PROJECT_NAME}_test_plugin
