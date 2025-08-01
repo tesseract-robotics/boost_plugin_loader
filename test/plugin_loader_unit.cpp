@@ -349,6 +349,63 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
   }
 }
 
+TEST(BoostPluginLoaderUnit, LoadTestPluginsSameSymbolDifferentSections)  // NOLINT
+{
+  using boost_plugin_loader::PluginLoader;
+  using boost_plugin_loader::TestPluginAdd;
+  using boost_plugin_loader::TestPluginMultiply;
+
+  // Both the plugin `TestPluginAddImpl` and `TestPluginMultiplyImpl` were exported with the same symbol name (defined
+  // by the target compile defintion __SYMBOL_NAME__) but in different sections and in different libraries Test to make
+  // sure the symbol from the wrong library does not get loaded
+
+  // Try to load an instance of `TestPluginAddImpl` from the library in which `TestPluginMultiplyImpl` was defined
+  {
+    PluginLoader plugin_loader;
+    plugin_loader.search_libraries.insert(PLUGINS_MULTIPLY);
+    plugin_loader.search_paths.insert(PLUGIN_DIR);
+
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginAdd>(getSymbolName()));
+  }
+
+  // Try to load an instance of `TestPluginMultiplyImpl` from the library in which `TestPluginAddImpl` was defined
+  {
+    PluginLoader plugin_loader;
+    plugin_loader.search_libraries.insert(PLUGINS_ADD);
+    plugin_loader.search_paths.insert(PLUGIN_DIR);
+
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginMultiply>(getSymbolName()));
+  }
+
+  // Given both libraries, correctly load and use each plugin, even though they share the same symbol name
+  {
+    PluginLoader plugin_loader;
+    plugin_loader.search_libraries.insert(PLUGINS_ADD);
+    plugin_loader.search_libraries.insert(PLUGINS_MULTIPLY);
+    plugin_loader.search_paths.insert(PLUGIN_DIR);
+
+    // Load and use a multiply plugin
+    {
+      std::shared_ptr<TestPluginMultiply> plugin;
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_NO_THROW(plugin = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName()));
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_NEAR(plugin->multiply(3.0, 3.0), 9.0, 1.0e-6);
+    }
+
+    // Load and use an add plugin
+    {
+      std::shared_ptr<TestPluginAdd> plugin;
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_NO_THROW(plugin = plugin_loader.createInstance<TestPluginAdd>(getSymbolName()));
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_NEAR(plugin->add(3.0, 3.0), 6.0, 1.0e-6);
+    }
+  }
+}
+
 int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);

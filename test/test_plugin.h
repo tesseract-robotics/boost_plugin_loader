@@ -40,6 +40,23 @@ protected:
   friend class PluginLoader;
 };
 
+/**
+ * @brief Dummy plugin interface for performing addition
+ */
+class TestPluginAdd
+{
+public:
+  virtual ~TestPluginAdd() = default;
+  virtual double add(double x, double y) = 0;
+  static std::string getSection()
+  {
+    return SECTION_ADD;
+  }
+
+protected:
+  friend class PluginLoader;
+};
+
 }  // namespace boost_plugin_loader
 
 // Macros for converting a non-string target compile definition into a string
@@ -49,10 +66,14 @@ protected:
 /**
  * @brief Function for getting the symbol name from the target compile definition __SYMBOL_NAME__
  */
-static inline std::string getSymbolName() { return STRINGIFY(__SYMBOL_NAME__); }
+static inline std::string getSymbolName()
+{
+  return STRINGIFY(__SYMBOL_NAME__);
+}
 
 // Create macros to export both plugins with a given alias and with section names defined as target compile definitions
 #include <boost_plugin_loader/macros.h>
 #define EXPORT_TEST_PLUGIN_MULTIPLY(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, SECTION_MULTIPLY)
+#define EXPORT_TEST_PLUGIN_ADD(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, SECTION_ADD)
 
 #endif  // BOOST_PLUGIN_LOADER_TEST_PLUGIN_H
