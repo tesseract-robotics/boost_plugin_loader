@@ -68,4 +68,4 @@ private:
 
 #include <boost_plugin_loader/macros.h>
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-#define EXPORT_SHAPE_PLUGIN(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, shape)
+#define EXPORT_SHAPE_PLUGIN(DERIVED_CLASS, ALIAS) EXPORT_CLASS_SECTIONED(DERIVED_CLASS, ALIAS, SECTION_SHAPE)
