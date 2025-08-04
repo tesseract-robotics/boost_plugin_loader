@@ -217,7 +217,14 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   for (const auto& lib : libraries)
   {
     if (hasSymbol<PluginBase>(lib, plugin_name))
-      return createSharedInstance<PluginBase>(lib, plugin_name);
+    {
+      auto plugin = createSharedInstance<PluginBase>(lib, plugin_name);
+
+      // Add the plugin to the internal cache to keep it in scope for the lifetime of the plugin loader
+      loaded_plugins_.push_back(std::dynamic_pointer_cast<void>(plugin));
+
+      return plugin;
+    }
   }
 
   std::stringstream msg;

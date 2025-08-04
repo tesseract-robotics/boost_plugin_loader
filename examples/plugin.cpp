@@ -26,13 +26,17 @@
 #include <boost_plugin_loader/plugin_loader.h>
 #include <boost_plugin_loader/plugin_loader.hpp>  // NOLINT(misc-include-cleaner)
 
+// Macros for converting a non-string target compile definition into a string
+#define STRINGIFY_HELPER(x) #x
+#define STRINGIFY(x) STRINGIFY_HELPER(x)
+
 namespace boost_plugin_loader
 {
 // Define the section name for loading plugins of base class `Printer`
 // This should match the section name specified in the plugin export macro for this class
 std::string Printer::getSection()
 {
-  return "printer";
+  return STRINGIFY(SECTION_PRINTER);
 }
 INSTANTIATE_PLUGIN_LOADER(Printer)
 
@@ -40,7 +44,7 @@ INSTANTIATE_PLUGIN_LOADER(Printer)
 // This should match the section name specified in the plugin export macro for this class
 std::string ShapeFactory::getSection()
 {
-  return "shape";
+  return STRINGIFY(SECTION_SHAPE);
 }
 INSTANTIATE_PLUGIN_LOADER(ShapeFactory)
 

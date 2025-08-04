@@ -48,7 +48,8 @@ void demoPrinterPlugins(const PluginLoader& loader)
     const Printer::Ptr plugin = loader.createInstance<Printer>(plugin_name);
     assert(plugin != nullptr);
     plugin->operator()();
-    // Note: `plugin` goes out of scope here, and the library providing its definition will be unloaded
+    // Note: `plugin` goes out of scope here. However, the plugin loader maintains a reference to it, so the library
+    // providing its definition will not be unload until the plugin loader goes out of scope.
   }
 }
 
@@ -60,8 +61,8 @@ void demoShapePlugins(const PluginLoader& loader)
   assert(shape_plugins.size() == 2);
 
   // Create the square and triangle factory plugins
-  // Note: these factories must stay in scope as long as they and any object they create are being used. Otherwise, the
-  // library providing them will be unloaded, resulting in undefined behavior and potential segfaults
+  // Note: the plugin loader must stay in scope as long as the plugins and any object the plugins create are being used.
+  // Otherwise, the library providing them will be unloaded, resulting in undefined behavior and potential segfaults
   auto square_factory = loader.createInstance<ShapeFactory>("Square");
   auto triangle_factory = loader.createInstance<ShapeFactory>("Triangle");
 
