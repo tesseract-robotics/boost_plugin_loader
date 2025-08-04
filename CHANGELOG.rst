@@ -2,8 +2,8 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.2 (2025-08-04)
+------------------
 * Ensure symbol is associated with defined section (`#33 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/33>`_)
   * Added hasSymbol method to check if the symbol exists in the library and the section associated with the plugin
   * Added compile definitions for plugin section and symbol; changed name of test plugin base class; update unit tests
