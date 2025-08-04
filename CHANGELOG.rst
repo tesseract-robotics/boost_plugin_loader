@@ -2,6 +2,17 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Ensure symbol is associated with defined section (`#33 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/33>`_)
+  * Added hasSymbol method to check if the symbol exists in the library and the section associated with the plugin
+  * Added compile definitions for plugin section and symbol; changed name of test plugin base class; update unit tests
+  * Added second plugin for addition with same name and different section; added unit test to validate section checking functionality
+  * Ran cmake format
+  * Updates to support Windows and Mac
+* Update ubuntu.yml
+* Contributors: Levi Armstrong, Michael Ripperger
+
 0.3.1 (2025-07-09)
 ------------------
 * Update to colcon-action v13
