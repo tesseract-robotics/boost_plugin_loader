@@ -1,6 +1,7 @@
 # Example plugin definition and explict template instantiation of plugin loader for test plugin class
 add_library(${PROJECT_NAME}_example_plugin plugin.cpp)
 target_link_libraries(${PROJECT_NAME}_example_plugin PUBLIC ${PROJECT_NAME})
+target_compile_definitions(${PROJECT_NAME}_example_plugin PUBLIC SECTION_PRINTER=printer SECTION_SHAPE=shape)
 target_cxx_version(${PROJECT_NAME}_example_plugin PUBLIC VERSION 17)
 target_clang_tidy(${PROJECT_NAME}_example_plugin ENABLE ${ENABLE_CLANG_TIDY})
 
@@ -14,6 +15,11 @@ add_library(
 target_link_libraries(${PROJECT_NAME}_example_plugin_impl PUBLIC ${PROJECT_NAME}_example_plugin)
 target_cxx_version(${PROJECT_NAME}_example_plugin_impl PUBLIC VERSION 17)
 target_clang_tidy(${PROJECT_NAME}_example_plugin_impl ENABLE ${ENABLE_CLANG_TIDY})
+
+# Add a target compile definition to the plugin base library denoting the name of the library in which the plugins are
+# implemented
+target_compile_definitions(${PROJECT_NAME}_example_plugin
+                           PUBLIC PLUGIN_LIBRARY_EXAMPLES="${PROJECT_NAME}_example_plugin_impl")
 
 # Example
 add_executable(${PROJECT_NAME}_example example.cpp)
