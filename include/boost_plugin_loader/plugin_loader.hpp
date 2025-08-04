@@ -37,10 +37,10 @@ namespace boost_plugin_loader
 /**
  * @brief Create a shared instance for the provided symbol_name loaded from the library_name searching system folders
  * for library
- * @details The symbol name is the alias provide when calling EXPORT_CLASS_SECTIONED
  * @param lib The library to search for available symbols
- * @param symbol_name The symbol to create a shared instance of
- * @return A shared pointer of the object with the symbol name located in library_name_
+ * @param symbol_name The symbol from which to create a shared instance. This name is the alias provided to
+ * EXPORT_CLASS_SECTIONED
+ * @return A shared pointer of the object with the symbol name located in library_name
  */
 template <class ClassBase>
 static std::shared_ptr<ClassBase> createSharedInstance(const boost::dll::shared_library& lib,
@@ -61,6 +61,26 @@ static std::shared_ptr<ClassBase> createSharedInstance(const boost::dll::shared_
 #endif
   return std::shared_ptr<ClassBase>(plugin.get(), [plugin](ClassBase*) mutable { plugin.reset(); });
 #endif
+}
+
+template <class ClassBase>
+typename std::enable_if<!has_getSection<ClassBase>::value, bool>::type
+PluginLoader::hasSymbol(const boost::dll::shared_library& lib, const std::string& symbol_name) const
+{
+  return lib.has(symbol_name);
+}
+
+/**
+ * @brief Checks that the library has the input symbol name and that the symbol is associated with the section defined
+ * in the plugin class.
+ */
+template <class ClassBase>
+typename std::enable_if<has_getSection<ClassBase>::value, bool>::type
+PluginLoader::hasSymbol(const boost::dll::shared_library& lib, const std::string& symbol_name) const
+{
+  std::vector<std::string> symbols = getAllAvailableSymbols(lib, ClassBase::getSection());
+  std::sort(symbols.begin(), symbols.end());
+  return std::find(symbols.begin(), symbols.end(), symbol_name) != symbols.end();
 }
 
 /**
@@ -196,7 +216,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   // Create an instance of the plugin
   for (const auto& lib : libraries)
   {
-    if (lib.has(plugin_name))
+    if (hasSymbol<PluginBase>(lib, plugin_name))
       return createSharedInstance<PluginBase>(lib, plugin_name);
   }
 

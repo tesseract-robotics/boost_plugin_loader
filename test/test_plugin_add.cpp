@@ -16,8 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef BOOST_PLUGIN_LOADER_TEST_PLUGIN_SUM_H
-#define BOOST_PLUGIN_LOADER_TEST_PLUGIN_SUM_H
 
 #include "test_plugin.h"
 
@@ -26,20 +24,28 @@
 
 namespace boost_plugin_loader
 {
-class TestPluginMultiplyImpl : public TestPluginMultiply
+class TestPluginAddImpl : public TestPluginAdd
 {
 public:
-  TestPluginMultiplyImpl() = default;
-  ~TestPluginMultiplyImpl() override = default;
-  TestPluginMultiplyImpl(const TestPluginMultiplyImpl&) = default;
-  TestPluginMultiplyImpl& operator=(const TestPluginMultiplyImpl&) = default;
-  TestPluginMultiplyImpl(TestPluginMultiplyImpl&&) = default;
-  TestPluginMultiplyImpl& operator=(TestPluginMultiplyImpl&&) = default;
-  double multiply(double x, double y) override;
+  TestPluginAddImpl() = default;
+  ~TestPluginAddImpl() override = default;
+  TestPluginAddImpl(const TestPluginAddImpl&) = default;
+  TestPluginAddImpl& operator=(const TestPluginAddImpl&) = default;
+  TestPluginAddImpl(TestPluginAddImpl&&) = default;
+
+  TestPluginAddImpl& operator=(TestPluginAddImpl&&) = default;
+
+  double add(double x, double y) override
+  {
+    return x + y;
+  }
 };
 
-PLUGIN_ANCHOR_DECL(TestPluginMultiplyImplAnchor)
+PLUGIN_ANCHOR_DECL(TestPluginAddImplAnchor)
+PLUGIN_ANCHOR_IMPL(TestPluginAddImplAnchor)
 
 }  // namespace boost_plugin_loader
 
-#endif  // BOOST_PLUGIN_LOADER_TEST_PLUGIN_SUM_H
+// Export the plugin with an alias defined by the target compile definition SYMBOL_NAME
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+EXPORT_TEST_PLUGIN_ADD(boost_plugin_loader::TestPluginAddImpl, SYMBOL_NAME)

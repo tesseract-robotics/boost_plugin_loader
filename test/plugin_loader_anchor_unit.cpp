@@ -29,38 +29,39 @@
 #include <boost_plugin_loader/plugin_loader.h>
 #include <boost_plugin_loader/plugin_loader.hpp>  // NOLINT(misc-include-cleaner)
 #include <boost_plugin_loader/utils.h>
-#include "test_plugin_base.h"
+#include "test_plugin.h"
 #include "test_plugin_multiply.h"
 
 TEST(BoostPluginLoaderAnchorUnit, LoadTestPlugin)  // NOLINT
 {
   using boost_plugin_loader::PluginLoader;
-  using boost_plugin_loader::TestPluginBase;
+  using boost_plugin_loader::TestPluginMultiply;
 
-  boost_plugin_loader::addSymbolLibraryToSearchLibrariesEnv(boost_plugin_loader::TestPluginMultiplyAnchor(), "UNITTESTE"
-                                                                                                             "NV");
+  boost_plugin_loader::addSymbolLibraryToSearchLibrariesEnv(boost_plugin_loader::TestPluginMultiplyImplAnchor(), "UNITT"
+                                                                                                                 "ESTEN"
+                                                                                                                 "V");
   PluginLoader plugin_loader;
   plugin_loader.search_libraries_env = "UNITTESTENV";
 
-  EXPECT_TRUE(plugin_loader.isPluginAvailable("plugin"));
-  auto plugin = plugin_loader.createInstance<TestPluginBase>("plugin");
+  EXPECT_TRUE(plugin_loader.isPluginAvailable(getSymbolName()));
+  auto plugin = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
   EXPECT_TRUE(plugin != nullptr);
   EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
 
   std::vector<std::string> sections = plugin_loader.getAvailableSections();
   EXPECT_EQ(sections.size(), 1);
-  EXPECT_EQ(sections.at(0), "TestBase");
+  EXPECT_EQ(sections.at(0), TestPluginMultiply::getSection());
 
   sections = plugin_loader.getAvailableSections(true);
   EXPECT_TRUE(sections.size() > 1);
 
-  std::vector<std::string> symbols = plugin_loader.getAvailablePlugins<TestPluginBase>();
+  std::vector<std::string> symbols = plugin_loader.getAvailablePlugins<TestPluginMultiply>();
   EXPECT_EQ(symbols.size(), 1);
-  EXPECT_EQ(symbols.at(0), "plugin");
+  EXPECT_EQ(symbols.at(0), getSymbolName());
 
-  symbols = plugin_loader.getAvailablePlugins("TestBase");
+  symbols = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
   EXPECT_EQ(symbols.size(), 1);
-  EXPECT_EQ(symbols.at(0), "plugin");
+  EXPECT_EQ(symbols.at(0), getSymbolName());
 }
 
 int main(int argc, char** argv)

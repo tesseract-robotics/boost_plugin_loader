@@ -36,14 +36,13 @@
 #include <boost_plugin_loader/utils.h>
 #include <boost_plugin_loader/plugin_loader.h>
 #include <boost_plugin_loader/plugin_loader.hpp>
-#include "test_plugin_base.h"
+#include "test_plugin.h"
 
 TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 {
   using namespace boost_plugin_loader;
-  const std::string lib_name = std::string(PLUGINS);
+  const std::string lib_name = std::string(PLUGINS_MULTIPLY);
   const std::string lib_dir = std::string(PLUGIN_DIR);
-  const std::string symbol_name = "plugin";
 
   {
 #ifndef _WIN32
@@ -131,26 +130,26 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
   {
     std::vector<std::string> sections = getAllAvailableSections(lib);
     EXPECT_EQ(sections.size(), 1);
-    EXPECT_EQ(sections.at(0), "TestBase");
+    EXPECT_EQ(sections.at(0), TestPluginMultiply::getSection());
 
     sections = getAllAvailableSections(lib, true);
     EXPECT_TRUE(sections.size() > 1);
   }
 
   {
-    std::vector<std::string> symbols = getAllAvailableSymbols(lib, "TestBase");
+    std::vector<std::string> symbols = getAllAvailableSymbols(lib, TestPluginMultiply::getSection());
     EXPECT_EQ(symbols.size(), 1);
-    EXPECT_EQ(symbols.at(0), symbol_name);
+    EXPECT_EQ(symbols.at(0), getSymbolName());
   }
 
   {
-    EXPECT_TRUE(lib.has(symbol_name));
+    EXPECT_TRUE(lib.has(getSymbolName()));
   }
 
 // For some reason on Ubuntu 18.04 it does not search the current directory when only the library name is provided
 #if BOOST_VERSION > 106800
   {
-    EXPECT_TRUE(lib.has(symbol_name));
+    EXPECT_TRUE(lib.has(getSymbolName()));
   }
 #endif
 
@@ -160,66 +159,66 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 
   // Load the plugin
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-  EXPECT_NO_THROW(createSharedInstance<TestPluginBase>(lib, symbol_name));
+  EXPECT_NO_THROW(createSharedInstance<TestPluginMultiply>(lib, getSymbolName()));
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-  EXPECT_ANY_THROW(createSharedInstance<TestPluginBase>(lib, "does_not_exist"));
+  EXPECT_ANY_THROW(createSharedInstance<TestPluginMultiply>(lib, "does_not_exist"));
 }
 
 TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
 {
   using boost_plugin_loader::PluginLoader;
-  using boost_plugin_loader::TestPluginBase;
+  using boost_plugin_loader::TestPluginMultiply;
 
   {
     PluginLoader plugin_loader;
     plugin_loader.search_paths.insert(std::string(PLUGIN_DIR));
-    plugin_loader.search_libraries.insert(std::string(PLUGINS));
+    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
 
-    EXPECT_TRUE(plugin_loader.isPluginAvailable("plugin"));
-    auto plugin = plugin_loader.createInstance<TestPluginBase>("plugin");
+    EXPECT_TRUE(plugin_loader.isPluginAvailable(getSymbolName()));
+    auto plugin = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
     EXPECT_TRUE(plugin != nullptr);
     EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
 
     std::vector<std::string> sections = plugin_loader.getAvailableSections();
     EXPECT_EQ(sections.size(), 1);
-    EXPECT_EQ(sections.at(0), "TestBase");
+    EXPECT_EQ(sections.at(0), TestPluginMultiply::getSection());
 
     sections = plugin_loader.getAvailableSections(true);
     EXPECT_TRUE(sections.size() > 1);
 
-    std::vector<std::string> symbols = plugin_loader.getAvailablePlugins<TestPluginBase>();
+    std::vector<std::string> symbols = plugin_loader.getAvailablePlugins<TestPluginMultiply>();
     EXPECT_EQ(symbols.size(), 1);
-    EXPECT_EQ(symbols.at(0), "plugin");
+    EXPECT_EQ(symbols.at(0), getSymbolName());
 
-    symbols = plugin_loader.getAvailablePlugins("TestBase");
+    symbols = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
     EXPECT_EQ(symbols.size(), 1);
-    EXPECT_EQ(symbols.at(0), "plugin");
+    EXPECT_EQ(symbols.at(0), getSymbolName());
   }
 
   {  // Use full path
     PluginLoader plugin_loader;
-    const std::string full_path = boost_plugin_loader::decorate(std::string(PLUGINS), std::string(PLUGIN_DIR));
+    const std::string full_path = boost_plugin_loader::decorate(std::string(PLUGINS_MULTIPLY), std::string(PLUGIN_DIR));
     plugin_loader.search_libraries.insert(full_path);
 
-    EXPECT_TRUE(plugin_loader.isPluginAvailable("plugin"));
-    auto plugin = plugin_loader.createInstance<TestPluginBase>("plugin");
+    EXPECT_TRUE(plugin_loader.isPluginAvailable(getSymbolName()));
+    auto plugin = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
     EXPECT_TRUE(plugin != nullptr);
     EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
 
     std::vector<std::string> sections = plugin_loader.getAvailableSections();
     EXPECT_EQ(sections.size(), 1);
-    EXPECT_EQ(sections.at(0), "TestBase");
+    EXPECT_EQ(sections.at(0), TestPluginMultiply::getSection());
 
     sections = plugin_loader.getAvailableSections(true);
     EXPECT_TRUE(sections.size() > 1);
 
-    std::vector<std::string> symbols = plugin_loader.getAvailablePlugins<TestPluginBase>();
+    std::vector<std::string> symbols = plugin_loader.getAvailablePlugins<TestPluginMultiply>();
     EXPECT_EQ(symbols.size(), 1);
-    EXPECT_EQ(symbols.at(0), "plugin");
+    EXPECT_EQ(symbols.at(0), getSymbolName());
 
-    symbols = plugin_loader.getAvailablePlugins("TestBase");
+    symbols = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
     EXPECT_EQ(symbols.size(), 1);
-    EXPECT_EQ(symbols.at(0), "plugin");
+    EXPECT_EQ(symbols.at(0), getSymbolName());
   }
 
 // For some reason on Ubuntu 18.04 it does not search the current directory when only the library name is provided
@@ -228,12 +227,12 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     PluginLoader plugin_loader;
     EXPECT_EQ(plugin_loader.count(), 0);
     EXPECT_TRUE(plugin_loader.empty());
-    plugin_loader.search_libraries.insert(std::string(PLUGINS));
+    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
     EXPECT_EQ(plugin_loader.count(), 1);
     EXPECT_FALSE(plugin_loader.empty());
 
-    EXPECT_TRUE(plugin_loader.isPluginAvailable("plugin"));
-    auto plugin = plugin_loader.createInstance<TestPluginBase>("plugin");
+    EXPECT_TRUE(plugin_loader.isPluginAvailable(getSymbolName()));
+    auto plugin = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
     EXPECT_TRUE(plugin != nullptr);
     EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
   }
@@ -244,25 +243,25 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     PluginLoader plugin_loader;
     plugin_loader.search_system_folders = false;
     plugin_loader.search_paths.insert("does_not_exist");
-    plugin_loader.search_libraries.insert(std::string(PLUGINS));
+    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
 
-    EXPECT_FALSE(plugin_loader.isPluginAvailable("plugin"));
+    EXPECT_FALSE(plugin_loader.isPluginAvailable(getSymbolName()));
     // Behavior change: used to return nullptr but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginBase>("plugin"));
+    EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginMultiply>(getSymbolName()));
   }
 #endif
 
   {
     PluginLoader plugin_loader;
     plugin_loader.search_system_folders = false;
-    plugin_loader.search_libraries.insert(std::string(PLUGINS));
+    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
 
     {
       EXPECT_FALSE(plugin_loader.isPluginAvailable("does_not_exist"));
       // Behavior change: used to return nullptr but now throws exception
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-      EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginBase>("does_not_exist"));
+      EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginMultiply>("does_not_exist"));
     }
 
     plugin_loader.search_system_folders = true;
@@ -271,7 +270,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
       EXPECT_FALSE(plugin_loader.isPluginAvailable("does_not_exist"));
       // Behavior change: used to return nullptr but now throws exception
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-      EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginBase>("does_not_exist"));
+      EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginMultiply>("does_not_exist"));
     }
   }
 
@@ -281,38 +280,38 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     plugin_loader.search_libraries.insert("does_not_exist");
 
     {
-      EXPECT_FALSE(plugin_loader.isPluginAvailable("plugin"));
+      EXPECT_FALSE(plugin_loader.isPluginAvailable(getSymbolName()));
       // Behavior change: used to return nullptr but now throws exception
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-      EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginBase>("plugin"));
+      EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginMultiply>(getSymbolName()));
     }
 
     plugin_loader.search_system_folders = true;
 
     {
-      EXPECT_FALSE(plugin_loader.isPluginAvailable("plugin"));
+      EXPECT_FALSE(plugin_loader.isPluginAvailable(getSymbolName()));
       // Behavior change: used to return nullptr but now throws exception
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-      EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginBase>("plugin"));
+      EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginMultiply>(getSymbolName()));
     }
   }
 
   {
     PluginLoader plugin_loader;
     plugin_loader.search_system_folders = false;
-    plugin_loader.search_libraries.insert(std::string(PLUGINS));
+    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins("TestBase");
+    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
     EXPECT_EQ(plugins.size(), 0);
   }
 
   {
     PluginLoader plugin_loader;
     plugin_loader.search_system_folders = true;
-    plugin_loader.search_libraries.insert(std::string(PLUGINS));
+    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
 
-    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins("TestBase");
+    const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
     EXPECT_EQ(plugins.size(), 1);
   }
 
@@ -320,16 +319,16 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     const PluginLoader plugin_loader;
     // Behavior change: used to return empty vector but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins("TestBase"));
+    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection()));
     // Behavior change: used to return empty vector but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.getAvailableSections("plugin"));
+    EXPECT_ANY_THROW(plugin_loader.getAvailableSections());
     // Behavior change: used to return nullptr but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.isPluginAvailable("plugin"));
+    EXPECT_ANY_THROW(plugin_loader.isPluginAvailable(getSymbolName()));
     // Behavior change: used to return nullptr but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginBase>("plugin"));
+    EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginMultiply>(getSymbolName()));
   }
 
   {
@@ -337,16 +336,73 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     plugin_loader.search_system_folders = false;
     // Behavior change: used to return empty vector but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins("TestBase"));
+    EXPECT_ANY_THROW(plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection()));
     // Behavior change: used to return empty vector but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.getAvailableSections("plugin"));
+    EXPECT_ANY_THROW(plugin_loader.getAvailableSections());
     // Behavior change: used to return nullptr but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.isPluginAvailable("plugin"));
+    EXPECT_ANY_THROW(plugin_loader.isPluginAvailable(getSymbolName()));
     // Behavior change: used to return nullptr but now throws exception
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
-    EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginBase>("plugin"));
+    EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginMultiply>(getSymbolName()));
+  }
+}
+
+TEST(BoostPluginLoaderUnit, LoadTestPluginsSameSymbolDifferentSections)  // NOLINT
+{
+  using boost_plugin_loader::PluginLoader;
+  using boost_plugin_loader::TestPluginAdd;
+  using boost_plugin_loader::TestPluginMultiply;
+
+  // Both the plugin `TestPluginAddImpl` and `TestPluginMultiplyImpl` were exported with the same symbol name (defined
+  // by the target compile defintion __SYMBOL_NAME__) but in different sections and in different libraries Test to make
+  // sure the symbol from the wrong library does not get loaded
+
+  // Try to load an instance of `TestPluginAddImpl` from the library in which `TestPluginMultiplyImpl` was defined
+  {
+    PluginLoader plugin_loader;
+    plugin_loader.search_libraries.insert(PLUGINS_MULTIPLY);
+    plugin_loader.search_paths.insert(PLUGIN_DIR);
+
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginAdd>(getSymbolName()));
+  }
+
+  // Try to load an instance of `TestPluginMultiplyImpl` from the library in which `TestPluginAddImpl` was defined
+  {
+    PluginLoader plugin_loader;
+    plugin_loader.search_libraries.insert(PLUGINS_ADD);
+    plugin_loader.search_paths.insert(PLUGIN_DIR);
+
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginMultiply>(getSymbolName()));
+  }
+
+  // Given both libraries, correctly load and use each plugin, even though they share the same symbol name
+  {
+    PluginLoader plugin_loader;
+    plugin_loader.search_libraries.insert(PLUGINS_ADD);
+    plugin_loader.search_libraries.insert(PLUGINS_MULTIPLY);
+    plugin_loader.search_paths.insert(PLUGIN_DIR);
+
+    // Load and use a multiply plugin
+    {
+      std::shared_ptr<TestPluginMultiply> plugin;
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_NO_THROW(plugin = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName()));
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_NEAR(plugin->multiply(3.0, 3.0), 9.0, 1.0e-6);
+    }
+
+    // Load and use an add plugin
+    {
+      std::shared_ptr<TestPluginAdd> plugin;
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_NO_THROW(plugin = plugin_loader.createInstance<TestPluginAdd>(getSymbolName()));
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+      EXPECT_NEAR(plugin->add(3.0, 3.0), 6.0, 1.0e-6);
+    }
   }
 }
 
