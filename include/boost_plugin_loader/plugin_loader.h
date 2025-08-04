@@ -176,6 +176,11 @@ protected:
   template <class ClassBase>
   typename std::enable_if<has_getSection<ClassBase>::value, bool>::type hasSymbol(const boost::dll::shared_library& lib,
                                                                                   const std::string& symbol_name) const;
+
+  /**
+   * @brief Container for loaded plugins to keep them in scope as long as the plugin loader is alive
+   */
+  mutable std::vector<std::shared_ptr<void>> loaded_plugins_;
 };
 
 }  // namespace boost_plugin_loader
