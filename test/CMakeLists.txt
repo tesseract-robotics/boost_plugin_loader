@@ -27,8 +27,8 @@ target_link_libraries(
 target_compile_definitions(${PROJECT_NAME}_plugin_loader_unit PRIVATE ${COMPILE_DEFINITIONS})
 target_compile_definitions(
   ${PROJECT_NAME}_plugin_loader_unit
-  PRIVATE PLUGIN_DIR="${CMAKE_CURRENT_BINARY_DIR}" PLUGINS_MULTIPLY="${PROJECT_NAME}_test_plugin_multiply"
-          PLUGINS_ADD="${PROJECT_NAME}_test_plugin_add")
+  PRIVATE PLUGIN_DIR="${CMAKE_CURRENT_BINARY_DIR}" PLUGIN_LIBRARY_MULTIPLY="${PROJECT_NAME}_test_plugin_multiply"
+          PLUGIN_LIBRARY_ADD="${PROJECT_NAME}_test_plugin_add")
 target_clang_tidy(${PROJECT_NAME}_plugin_loader_unit ENABLE ${ENABLE_CLANG_TIDY})
 target_cxx_version(${PROJECT_NAME}_plugin_loader_unit PUBLIC VERSION 17)
 target_code_coverage(
