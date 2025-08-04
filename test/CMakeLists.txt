@@ -23,7 +23,8 @@ target_link_libraries(
   PRIVATE GTest::GTest
           GTest::Main
           ${PROJECT_NAME}
-          ${PROJECT_NAME}_test_plugin)
+          ${PROJECT_NAME}_test_plugin
+          ${PROJECT_NAME}_example_plugin)
 target_compile_definitions(${PROJECT_NAME}_plugin_loader_unit PRIVATE ${COMPILE_DEFINITIONS})
 target_compile_definitions(
   ${PROJECT_NAME}_plugin_loader_unit

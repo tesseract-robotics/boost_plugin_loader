@@ -37,6 +37,7 @@
 #include <boost_plugin_loader/plugin_loader.h>
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include "test_plugin.h"
+#include "../examples/shape/shape.h"
 
 TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 {
@@ -405,6 +406,41 @@ TEST(BoostPluginLoaderUnit, LoadTestPluginsSameSymbolDifferentSections)  // NOLI
       EXPECT_NEAR(plugin->add(3.0, 3.0), 6.0, 1.0e-6);
     }
   }
+}
+
+TEST(BoostPluginLoaderUnit, TestPluginLoaderScope)  // NOLINT
+{
+  using boost_plugin_loader::PluginLoader;
+  using boost_plugin_loader::Shape;
+  using boost_plugin_loader::ShapeFactory;
+
+  // Create a plugin loader
+  PluginLoader plugin_loader;
+
+  // Configure the plugin loader to be able to find the shape plugins from the example subdirectory
+  plugin_loader.search_libraries.insert(PLUGIN_LIBRARY_EXAMPLES);
+  plugin_loader.search_paths.insert(PLUGIN_DIR);
+
+  // Create an instance of a triangle shape using a plugin that goes out of scope
+  Shape::Ptr triangle;
+  {
+    ShapeFactory::Ptr triangle_factory;
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    ASSERT_NO_THROW(triangle_factory = plugin_loader.createInstance<ShapeFactory>("Triangle"));
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+    ASSERT_NO_THROW(triangle = triangle_factory->create(std::make_tuple<double, double>(2.0, 4.0)));
+
+    // The plugin factory goes out of scope here, but the plugin loader maintains a pointer to it internally, keeping
+    // the plugin library loaded
+  }
+
+  // Use an object created by a plugin whose local instance has gone out of scope but is still maintained in-scope by
+  // the plugin loader
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+  double area;
+  EXPECT_NO_THROW(area = triangle->area());
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+  EXPECT_NEAR(area, 4.0, 1.0e-6);
 }
 
 int main(int argc, char** argv)
