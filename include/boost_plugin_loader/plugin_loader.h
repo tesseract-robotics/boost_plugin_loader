@@ -24,6 +24,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <mutex>
 
 /** @brief Macro for explicitly template instantiating a plugin loader for a given base class */
 #define INSTANTIATE_PLUGIN_LOADER(PluginBase)                                                                          \
@@ -181,6 +182,7 @@ protected:
    * @brief Container for loaded plugins to keep them in scope as long as the plugin loader is alive
    */
   mutable std::vector<std::shared_ptr<void>> loaded_plugins_;
+  mutable std::mutex plugin_cache_mutex_;
 };
 
 }  // namespace boost_plugin_loader
