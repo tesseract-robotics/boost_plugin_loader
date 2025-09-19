@@ -63,6 +63,56 @@ static std::shared_ptr<ClassBase> createSharedInstance(const boost::dll::shared_
 #endif
 }
 
+PluginLoader::PluginLoader(const PluginLoader& other)
+  : search_system_folders(other.search_system_folders)
+  , search_paths(other.search_paths)
+  , search_libraries(other.search_libraries)
+  , search_paths_env(other.search_paths_env)
+  , search_libraries_env(other.search_libraries_env)
+{
+  std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
+  // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
+  libraries_by_path_ = other.libraries_by_path_;
+}
+
+PluginLoader& PluginLoader::operator=(const PluginLoader& other)
+{
+  search_system_folders = other.search_system_folders;
+  search_paths = other.search_paths;
+  search_libraries = other.search_libraries;
+  search_paths_env = other.search_paths_env;
+  search_libraries_env = other.search_libraries_env;
+
+  std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
+  libraries_by_path_ = other.libraries_by_path_;
+  return *this;
+}
+
+PluginLoader::PluginLoader(PluginLoader&& other) noexcept
+  : search_system_folders(other.search_system_folders)
+  , search_paths(std::move(other.search_paths))
+  , search_libraries(std::move(other.search_libraries))
+  , search_paths_env(std::move(other.search_paths_env))
+  , search_libraries_env(std::move(other.search_libraries_env))
+{
+  std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
+  // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
+  libraries_by_path_ = std::move(other.libraries_by_path_);
+}
+
+PluginLoader& PluginLoader::operator=(PluginLoader&& other) noexcept
+{
+  search_system_folders = other.search_system_folders;
+  search_paths = std::move(other.search_paths);
+  search_libraries = std::move(other.search_libraries);
+  search_paths_env = std::move(other.search_paths_env);
+  search_libraries_env = std::move(other.search_libraries_env);
+
+  std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
+  libraries_by_path_ = std::move(other.libraries_by_path_);
+  return *this;
+}
+
 template <class ClassBase>
 typename std::enable_if<!has_getSection<ClassBase>::value, bool>::type
 PluginLoader::hasSymbol(const boost::dll::shared_library& lib, const std::string& symbol_name) const
@@ -96,11 +146,12 @@ PluginLoader::hasSymbol(const boost::dll::shared_library& lib, const std::string
  * Libraries specified with absolute paths will be returned first in the list before libraries found in local paths (but
  * in no particular order in at the front of the list).
  */
-static std::vector<boost::dll::shared_library> loadLibraries(const std::vector<std::string>& library_names,
-                                                             const std::vector<std::string>& search_paths_local,
-                                                             const bool search_system_folders)
+static std::vector<boost::dll::shared_library>
+loadLibraries(const std::vector<std::string>& library_names, const std::vector<std::string>& search_paths_local,
+              const bool search_system_folders, std::unordered_map<std::string, boost::dll::shared_library>& cache)
 {
   std::vector<boost::dll::shared_library> libraries;
+  libraries.reserve(library_names.size());
 
   // Loop over each provided library name
   for (const std::string& library_name : library_names)
@@ -111,7 +162,9 @@ static std::vector<boost::dll::shared_library> loadLibraries(const std::vector<s
 
       if (boost::filesystem::exists(library_path) && library_path.is_absolute())
       {
-        const std::optional<boost::dll::shared_library> lib = loadLibrary(library_path);
+        auto it = cache.find(library_path.string());
+        const std::optional<boost::dll::shared_library> lib =
+            (it != cache.end()) ? it->second : loadLibrary(library_path);
 
         // If the library exists, add it to the output list and continue to the next library name
         if (lib.has_value())
@@ -119,6 +172,11 @@ static std::vector<boost::dll::shared_library> loadLibraries(const std::vector<s
           // Libraries specified as absolute paths should appear first in the output list, so insert them at the front
           // of the list
           libraries.insert(libraries.begin(), lib.value());
+
+          // Add to cache if it did not exist
+          if (it == cache.end())
+            cache[library_path.string()] = lib.value();
+
           continue;
         }
       }
@@ -130,12 +188,19 @@ static std::vector<boost::dll::shared_library> loadLibraries(const std::vector<s
     for (const std::string& search_path : search_paths_local)
     {
       const boost::filesystem::path library_path = boost::filesystem::path(search_path) / library_name;
-      lib = loadLibrary(library_path);
+
+      auto it = cache.find(library_path.string());
+      lib = (it != cache.end()) ? it->second : loadLibrary(library_path);
 
       // If the library exists at this path, add the library to the output list and break out of the loop
       if (lib.has_value())
       {
         libraries.push_back(lib.value());
+
+        // Add to cache if it did not exist
+        if (it == cache.end())
+          cache[library_path.string()] = lib.value();
+
         break;
       }
     }
@@ -144,11 +209,18 @@ static std::vector<boost::dll::shared_library> loadLibraries(const std::vector<s
     // library (if enabled)
     if (lib == std::nullopt && search_system_folders)
     {
-      lib = loadLibrary(library_name);
+      auto it = cache.find(library_name);
+      lib = (it != cache.end()) ? it->second : loadLibrary(library_name);
 
       // Add the library to the output list, and break out of the loop
       if (lib.has_value())
+      {
         libraries.push_back(lib.value());
+
+        // Add to cache if it did not exist
+        if (it == cache.end())
+          cache[library_name] = lib.value();
+      }
     }
   }
 
@@ -210,8 +282,10 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   const std::vector<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
 
   // Load the libraries
-  const std::vector<boost::dll::shared_library> libraries =
-      loadLibraries(library_names, search_paths_local, search_system_folders);
+  const std::vector<boost::dll::shared_library> libraries = [&]() {
+    std::scoped_lock lock(libraries_mutex_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_by_path_);
+  }();
 
   // Create an instance of the plugin
   for (const auto& lib : libraries)
@@ -236,8 +310,10 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   const std::vector<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
 
   // Load the libraries
-  const std::vector<boost::dll::shared_library> libraries =
-      loadLibraries(library_names, search_paths_local, search_system_folders);
+  const std::vector<boost::dll::shared_library> libraries = [&]() {
+    std::scoped_lock lock(libraries_mutex_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_by_path_);
+  }();
 
   // Check for the symbol name
   return std::any_of(libraries.begin(), libraries.end(), [&](const auto& lib) { return lib.has(plugin_name); });
@@ -261,8 +337,10 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   const std::vector<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
 
   // Load the libraries
-  const std::vector<boost::dll::shared_library> libraries =
-      loadLibraries(library_names, search_paths_local, search_system_folders);
+  const std::vector<boost::dll::shared_library> libraries = [&]() {
+    std::scoped_lock lock(libraries_mutex_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_by_path_);
+  }();
 
   // Populate the list of plugins
   std::vector<std::string> plugins;
@@ -286,8 +364,10 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   const std::vector<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
 
   // Load the libraries
-  const std::vector<boost::dll::shared_library> libraries =
-      loadLibraries(library_names, search_paths_local, search_system_folders);
+  const std::vector<boost::dll::shared_library> libraries = [&]() {
+    std::scoped_lock lock(libraries_mutex_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_by_path_);
+  }();
 
   // Populate the list of sections
   std::vector<std::string> sections;
@@ -308,6 +388,12 @@ int PluginLoader::count() const
 bool PluginLoader::empty() const
 {
   return (count() == 0);
+}
+
+void PluginLoader::clear()
+{
+  std::scoped_lock lock(libraries_mutex_);
+  libraries_by_path_.clear();
 }
 
 }  // namespace boost_plugin_loader
