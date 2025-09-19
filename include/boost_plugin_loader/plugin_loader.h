@@ -20,7 +20,6 @@
 #define BOOST_PLUGIN_LOADER_PLUGIN_LOADER_H
 
 // STD
-#include <set>
 #include <string>
 #include <memory>
 #include <vector>
@@ -37,6 +36,7 @@ class shared_library;
 
 namespace boost_plugin_loader
 {
+
 /** @brief Used to test for getSection method for getAvailablePlugins */
 template <typename T>
 struct has_getSection
@@ -79,10 +79,10 @@ public:
   bool search_system_folders{ true };
 
   /** @brief A list of paths to search for plugins */
-  std::set<std::string> search_paths;
+  std::vector<std::string> search_paths;
 
   /** @brief A list of library names without the prefix or suffix that contain plugins*/
-  std::set<std::string> search_libraries;
+  std::vector<std::string> search_libraries;
 
   /** @brief The environment variable containing plugin search paths */
   std::string search_paths_env;
@@ -149,18 +149,18 @@ public:
 protected:
   template <typename PluginBase>
   void reportErrorCommon(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
-                         const std::set<std::string>& search_paths,
-                         const std::set<std::string>& search_libraries) const;
+                         const std::vector<std::string>& search_paths,
+                         const std::vector<std::string>& search_libraries) const;
 
   template <typename PluginBase>
   typename std::enable_if_t<!has_getSection<PluginBase>::value, void>
   reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
-              const std::set<std::string>& search_paths, const std::set<std::string>& search_libraries) const;
+              const std::vector<std::string>& search_paths, const std::vector<std::string>& search_libraries) const;
 
   template <typename PluginBase>
   typename std::enable_if_t<has_getSection<PluginBase>::value, void>
   reportError(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
-              const std::set<std::string>& search_paths, const std::set<std::string>& search_libraries) const;
+              const std::vector<std::string>& search_paths, const std::vector<std::string>& search_libraries) const;
 
   /**
    * @brief Checks if the library has the input symbol name, given that the plugin class does not define a section name

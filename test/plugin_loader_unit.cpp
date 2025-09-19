@@ -25,7 +25,11 @@
 #include <set>
 #include <vector>
 #include <optional>
+#include <future>
 #include <cstdlib>  // NOLINT(misc-include-cleaner)
+#include <thread>
+#include <chrono>
+using namespace std::chrono_literals;
 
 // Boost
 #include <boost/version.hpp>
@@ -46,55 +50,54 @@ TEST(BoostPluginLoaderUnit, Utils)  // NOLINT
 
   {
 #ifndef _WIN32
-    std::string env_var = "UNITTESTENV=a:b:c";
+    std::string env_var = "UNITTESTENV=c:b:a";
 #else
-    std::string env_var = "UNITTESTENV=a;b;c";
+    std::string env_var = "UNITTESTENV=c;b;a";
 #endif
     putenv(env_var.data());  // NOLINT(misc-include-cleaner)
-    std::set<std::string> s = parseEnvironmentVariableList("UNITTESTENV");
-    std::vector<std::string> v(s.begin(), s.end());
-    EXPECT_EQ(v[0], "a");
+    std::vector<std::string> v = parseEnvironmentVariableList("UNITTESTENV");
+    EXPECT_EQ(v[0], "c");
     EXPECT_EQ(v[1], "b");
-    EXPECT_EQ(v[2], "c");
+    EXPECT_EQ(v[2], "a");
 
-    s = parseEnvironmentVariableList("does_not_exist");
-    EXPECT_TRUE(s.empty());
+    v = parseEnvironmentVariableList("does_not_exist");
+    EXPECT_TRUE(v.empty());
   }
 
   {  // Test getAllSearchPaths
 #ifndef _WIN32
-    std::string env_var = "UNITTESTENV=a:b:c";
+    std::string env_var = "UNITTESTENV=c:b:a";
 #else
-    std::string env_var = "UNITTESTENV=a;b;c";
+    std::string env_var = "UNITTESTENV=c;b;a";
 #endif
     putenv(env_var.data());  // NOLINT(misc-include-cleaner)
     std::string search_paths_env = "UNITTESTENV";
-    std::set<std::string> existing_search_paths;
-    std::set<std::string> s = getAllSearchPaths(search_paths_env, existing_search_paths);
+    std::vector<std::string> existing_search_paths;
+    std::vector<std::string> s = getAllSearchPaths(search_paths_env, existing_search_paths);
     EXPECT_EQ(s.size(), 3);
     search_paths_env.clear();
     s = getAllSearchPaths(search_paths_env, existing_search_paths);
     EXPECT_TRUE(s.empty());
-    existing_search_paths = { "d", "e" };
+    existing_search_paths.insert(existing_search_paths.end(), { "d", "e" });
     s = getAllSearchPaths(search_paths_env, existing_search_paths);
     EXPECT_EQ(s.size(), 2);
   }
 
   {  // Test getAllLibraryNames
 #ifndef _WIN32
-    std::string env_var = "UNITTESTENV=a:b:c";
+    std::string env_var = "UNITTESTENV=c:b:a";
 #else
-    std::string env_var = "UNITTESTENV=a;b;c";
+    std::string env_var = "UNITTESTENV=c;b;a";
 #endif
     putenv(env_var.data());  // NOLINT(misc-include-cleaner)
     std::string search_paths_env = "UNITTESTENV";
-    std::set<std::string> existing_search_paths;
-    std::set<std::string> s = getAllLibraryNames(search_paths_env, existing_search_paths);
+    std::vector<std::string> existing_search_paths;
+    std::vector<std::string> s = getAllLibraryNames(search_paths_env, existing_search_paths);
     EXPECT_EQ(s.size(), 3);
     search_paths_env.clear();
     s = getAllSearchPaths(search_paths_env, existing_search_paths);
     EXPECT_TRUE(s.empty());
-    existing_search_paths = { "d", "e" };
+    existing_search_paths.insert(existing_search_paths.end(), { "d", "e" });
     s = getAllSearchPaths(search_paths_env, existing_search_paths);
     EXPECT_EQ(s.size(), 2);
   }
@@ -171,8 +174,8 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
 
   {
     PluginLoader plugin_loader;
-    plugin_loader.search_paths.insert(std::string(PLUGIN_DIR));
-    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
+    plugin_loader.search_paths.push_back(std::string(PLUGIN_DIR));
+    plugin_loader.search_libraries.push_back(std::string(PLUGINS_MULTIPLY));
 
     EXPECT_TRUE(plugin_loader.isPluginAvailable(getSymbolName()));
     auto plugin = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
@@ -198,7 +201,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
   {  // Use full path
     PluginLoader plugin_loader;
     const std::string full_path = boost_plugin_loader::decorate(std::string(PLUGINS_MULTIPLY), std::string(PLUGIN_DIR));
-    plugin_loader.search_libraries.insert(full_path);
+    plugin_loader.search_libraries.push_back(full_path);
 
     EXPECT_TRUE(plugin_loader.isPluginAvailable(getSymbolName()));
     auto plugin = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
@@ -227,7 +230,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
     PluginLoader plugin_loader;
     EXPECT_EQ(plugin_loader.count(), 0);
     EXPECT_TRUE(plugin_loader.empty());
-    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
+    plugin_loader.search_libraries.push_back(std::string(PLUGINS_MULTIPLY));
     EXPECT_EQ(plugin_loader.count(), 1);
     EXPECT_FALSE(plugin_loader.empty());
 
@@ -242,8 +245,8 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
   {
     PluginLoader plugin_loader;
     plugin_loader.search_system_folders = false;
-    plugin_loader.search_paths.insert("does_not_exist");
-    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
+    plugin_loader.search_paths.push_back("does_not_exist");
+    plugin_loader.search_libraries.push_back(std::string(PLUGINS_MULTIPLY));
 
     EXPECT_FALSE(plugin_loader.isPluginAvailable(getSymbolName()));
     // Behavior change: used to return nullptr but now throws exception
@@ -255,7 +258,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
   {
     PluginLoader plugin_loader;
     plugin_loader.search_system_folders = false;
-    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
+    plugin_loader.search_libraries.push_back(std::string(PLUGINS_MULTIPLY));
 
     {
       EXPECT_FALSE(plugin_loader.isPluginAvailable("does_not_exist"));
@@ -277,7 +280,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
   {
     PluginLoader plugin_loader;
     plugin_loader.search_system_folders = false;
-    plugin_loader.search_libraries.insert("does_not_exist");
+    plugin_loader.search_libraries.push_back("does_not_exist");
 
     {
       EXPECT_FALSE(plugin_loader.isPluginAvailable(getSymbolName()));
@@ -299,7 +302,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
   {
     PluginLoader plugin_loader;
     plugin_loader.search_system_folders = false;
-    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
+    plugin_loader.search_libraries.push_back(std::string(PLUGINS_MULTIPLY));
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
     const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
@@ -309,7 +312,7 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
   {
     PluginLoader plugin_loader;
     plugin_loader.search_system_folders = true;
-    plugin_loader.search_libraries.insert(std::string(PLUGINS_MULTIPLY));
+    plugin_loader.search_libraries.push_back(std::string(PLUGINS_MULTIPLY));
 
     const std::vector<std::string> plugins = plugin_loader.getAvailablePlugins(TestPluginMultiply::getSection());
     EXPECT_EQ(plugins.size(), 1);
@@ -362,8 +365,8 @@ TEST(BoostPluginLoaderUnit, LoadTestPluginsSameSymbolDifferentSections)  // NOLI
   // Try to load an instance of `TestPluginAddImpl` from the library in which `TestPluginMultiplyImpl` was defined
   {
     PluginLoader plugin_loader;
-    plugin_loader.search_libraries.insert(PLUGINS_MULTIPLY);
-    plugin_loader.search_paths.insert(PLUGIN_DIR);
+    plugin_loader.search_libraries.push_back(PLUGINS_MULTIPLY);
+    plugin_loader.search_paths.push_back(PLUGIN_DIR);
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
     EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginAdd>(getSymbolName()));
@@ -372,8 +375,8 @@ TEST(BoostPluginLoaderUnit, LoadTestPluginsSameSymbolDifferentSections)  // NOLI
   // Try to load an instance of `TestPluginMultiplyImpl` from the library in which `TestPluginAddImpl` was defined
   {
     PluginLoader plugin_loader;
-    plugin_loader.search_libraries.insert(PLUGINS_ADD);
-    plugin_loader.search_paths.insert(PLUGIN_DIR);
+    plugin_loader.search_libraries.push_back(PLUGINS_ADD);
+    plugin_loader.search_paths.push_back(PLUGIN_DIR);
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
     EXPECT_ANY_THROW(plugin_loader.createInstance<TestPluginMultiply>(getSymbolName()));
@@ -382,9 +385,9 @@ TEST(BoostPluginLoaderUnit, LoadTestPluginsSameSymbolDifferentSections)  // NOLI
   // Given both libraries, correctly load and use each plugin, even though they share the same symbol name
   {
     PluginLoader plugin_loader;
-    plugin_loader.search_libraries.insert(PLUGINS_ADD);
-    plugin_loader.search_libraries.insert(PLUGINS_MULTIPLY);
-    plugin_loader.search_paths.insert(PLUGIN_DIR);
+    plugin_loader.search_libraries.push_back(PLUGINS_ADD);
+    plugin_loader.search_libraries.push_back(PLUGINS_MULTIPLY);
+    plugin_loader.search_paths.push_back(PLUGIN_DIR);
 
     // Load and use a multiply plugin
     {

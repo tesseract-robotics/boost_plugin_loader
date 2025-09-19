@@ -84,8 +84,8 @@ int main(int /*argc*/, char** /*argv*/)  // NOLINT
 {
   // Create and configure the plugin loader to be able to find libraries in which plugins exist
   PluginLoader loader;
-  loader.search_paths.insert(PLUGIN_DIR);
-  loader.search_libraries.insert(PLUGINS);
+  loader.search_paths.push_back(PLUGIN_DIR);
+  loader.search_libraries.push_back(PLUGINS);
 
   // Printer plugins
   demoPrinterPlugins(loader);

@@ -22,7 +22,6 @@
 // STD
 #include <string>
 #include <vector>
-#include <set>
 #include <optional>
 
 // Boost
@@ -30,6 +29,7 @@
 
 namespace boost_plugin_loader
 {
+
 /** @brief The Boost Plugin Loader Exception class */
 class PluginLoaderException : public std::runtime_error
 {
@@ -83,7 +83,7 @@ std::string decorate(const std::string& library_name, const std::string& library
  * @param env_variable The environment variable name to extract list from
  * @return A list extracted from variable name
  */
-std::set<std::string> parseEnvironmentVariableList(const std::string& env_variable);
+std::vector<std::string> parseEnvironmentVariableList(const std::string& env_variable);
 
 /**
  * @brief Get all available search paths
@@ -91,8 +91,8 @@ std::set<std::string> parseEnvironmentVariableList(const std::string& env_variab
  * @param existing_search_libraries A list of existing search paths
  * @return A list of search paths
  */
-std::set<std::string> getAllSearchPaths(const std::string& search_paths_env,
-                                        const std::set<std::string>& existing_search_paths);
+std::vector<std::string> getAllSearchPaths(const std::string& search_paths_env,
+                                           const std::vector<std::string>& existing_search_paths);
 
 /**
  * @brief Get all available library names
@@ -100,8 +100,8 @@ std::set<std::string> getAllSearchPaths(const std::string& search_paths_env,
  * @param existing_search_libraries A list of existing library names without the prefix or suffix that contain plugins
  * @return A list of library names without the prefix or suffix that contain plugins
  */
-std::set<std::string> getAllLibraryNames(const std::string& search_libraries_env,
-                                         const std::set<std::string>& existing_search_libraries);
+std::vector<std::string> getAllLibraryNames(const std::string& search_libraries_env,
+                                            const std::vector<std::string>& existing_search_libraries);
 
 /**
  * @brief Utility function to add library containing symbol to the search env variable
