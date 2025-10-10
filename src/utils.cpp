@@ -32,7 +32,6 @@
 // STD
 #include <vector>
 #include <string>
-#include <set>
 #include <algorithm>
 #include <optional>
 #include <cstring>
@@ -117,44 +116,47 @@ std::string decorate(const std::string& library_name, const std::string& library
   return actual_path.string();
 }
 
-std::set<std::string> parseEnvironmentVariableList(const std::string& env_variable)
+std::vector<std::string> parseEnvironmentVariableList(const std::string& env_variable)
 {
-  std::set<std::string> list;
   char* env_var = std::getenv(env_variable.c_str());
   if (env_var == nullptr)  // Environment variable not found
-    return list;
+    return {};
 
   std::string evn_str = std::string(env_var);
+  std::vector<std::string> env_list;
 #ifndef _WIN32
-  boost::split(list, evn_str, boost::is_any_of(":"), boost::token_compress_on);
+  boost::split(env_list, evn_str, boost::is_any_of(":"), boost::token_compress_on);
 #else
-  boost::split(list, evn_str, boost::is_any_of(";"), boost::token_compress_on);
+  boost::split(env_list, evn_str, boost::is_any_of(";"), boost::token_compress_on);
 #endif
+
+  std::vector<std::string> list;
+  list.insert(list.end(), env_list.begin(), env_list.end());
   return list;
 }
 
-std::set<std::string> getAllSearchPaths(const std::string& search_paths_env,
-                                        const std::set<std::string>& existing_search_paths)
+std::vector<std::string> getAllSearchPaths(const std::string& search_paths_env,
+                                           const std::vector<std::string>& existing_search_paths)
 {
   // Check for environment variable to override default library
   if (!search_paths_env.empty())
   {
-    std::set<std::string> search_paths = parseEnvironmentVariableList(search_paths_env);
-    search_paths.insert(existing_search_paths.begin(), existing_search_paths.end());
+    std::vector<std::string> search_paths = parseEnvironmentVariableList(search_paths_env);
+    search_paths.insert(search_paths.end(), existing_search_paths.begin(), existing_search_paths.end());
     return search_paths;
   }
 
   return existing_search_paths;
 }
 
-std::set<std::string> getAllLibraryNames(const std::string& search_libraries_env,
-                                         const std::set<std::string>& existing_search_libraries)
+std::vector<std::string> getAllLibraryNames(const std::string& search_libraries_env,
+                                            const std::vector<std::string>& existing_search_libraries)
 {
   // Check for environment variable to override default library
   if (!search_libraries_env.empty())
   {
-    std::set<std::string> search_libraries = parseEnvironmentVariableList(search_libraries_env);
-    search_libraries.insert(existing_search_libraries.begin(), existing_search_libraries.end());
+    std::vector<std::string> search_libraries = parseEnvironmentVariableList(search_libraries_env);
+    search_libraries.insert(search_libraries.end(), existing_search_libraries.begin(), existing_search_libraries.end());
     return search_libraries;
   }
 

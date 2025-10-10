@@ -22,6 +22,6 @@
 namespace boost_plugin_loader
 {
 class PluginLoader;
-}
+}  // namespace boost_plugin_loader
 
 #endif  // BOOST_PLUGIN_LOADER_FWD_H
