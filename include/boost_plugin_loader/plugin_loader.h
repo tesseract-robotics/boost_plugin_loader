@@ -153,7 +153,7 @@ public:
    */
   inline bool empty() const;
 
-  /** @brief Clear internal state including cache objects */
+  /** @brief Clear the internal cache of loaded plugin libraries */
   inline void clear();
 
 protected:
