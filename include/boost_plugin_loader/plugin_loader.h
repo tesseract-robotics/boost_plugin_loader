@@ -23,16 +23,16 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <mutex>
+#include <unordered_map>
+
+// Boost
+#include <boost/dll/shared_library.hpp>
 
 /** @brief Macro for explicitly template instantiating a plugin loader for a given base class */
 #define INSTANTIATE_PLUGIN_LOADER(PluginBase)                                                                          \
   template std::vector<std::string> boost_plugin_loader::PluginLoader::getAvailablePlugins<PluginBase>() const;        \
   template std::shared_ptr<PluginBase> boost_plugin_loader::PluginLoader::createInstance(const std::string&) const;
-
-namespace boost::dll
-{
-class shared_library;
-}
 
 namespace boost_plugin_loader
 {
@@ -75,6 +75,13 @@ struct has_getSection
 class PluginLoader
 {
 public:
+  PluginLoader() = default;
+  ~PluginLoader() = default;
+  inline PluginLoader(const PluginLoader& other);
+  inline PluginLoader& operator=(const PluginLoader& other);
+  inline PluginLoader(PluginLoader&& other) noexcept;
+  inline PluginLoader& operator=(PluginLoader&& other) noexcept;
+
   /** @brief Indicate is system folders may be search if plugin is not found in any of the paths */
   bool search_system_folders{ true };
 
@@ -146,7 +153,14 @@ public:
    */
   inline bool empty() const;
 
+  /** @brief Clear the internal cache of loaded plugin libraries */
+  inline void clear();
+
 protected:
+  mutable std::mutex libraries_mutex_;
+  /** @brief Internal cache of loaded plugin libraries, stored by the path from which the library was loaded */
+  mutable std::unordered_map<std::string, boost::dll::shared_library> libraries_;
+
   template <typename PluginBase>
   void reportErrorCommon(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
                          const std::vector<std::string>& search_paths,
