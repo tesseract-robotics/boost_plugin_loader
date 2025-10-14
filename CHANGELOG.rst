@@ -2,8 +2,8 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2025-10-14)
+------------------
 * Leverage library cache (`#36 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/36>`_)
   Co-authored-by: Michael Ripperger <michael.ripperger@swri.org>
 * Bug fix so search path order is preserved (`#35 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/35>`_)
