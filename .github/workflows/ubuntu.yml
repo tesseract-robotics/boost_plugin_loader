@@ -72,11 +72,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
         with:
-          name: debian_package
+          name: debian_package_${{ matrix.distro }}
           path: ${{ github.workspace }}/artifacts/*.deb
 
       - uses: actions/upload-artifact@v4
         if: ${{ github.event_name == 'release' && github.event.action == 'released' }}
         with:
-          name: archive_package
+          name: archive_package_${{ matrix.distro }}
           path: ${{ github.workspace }}/artifacts/*.tar.xz
