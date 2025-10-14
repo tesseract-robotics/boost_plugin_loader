@@ -2,8 +2,8 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.1 (2025-10-14)
+------------------
 * Fix ubuntu CI pipeline
 * Contributors: Levi Armstrong
 
