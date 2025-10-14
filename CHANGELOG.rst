@@ -2,6 +2,11 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix debian and archive name
+* Contributors: Levi Armstrong
+
 0.4.1 (2025-10-14)
 ------------------
 * Fix ubuntu CI pipeline
