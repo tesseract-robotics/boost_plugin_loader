@@ -158,7 +158,8 @@ public:
 
 protected:
   mutable std::mutex libraries_mutex_;
-  mutable std::unordered_map<std::string, boost::dll::shared_library> libraries_by_path_;
+  /** @brief Internal cache of loaded plugin libraries, stored by the path from which the library was loaded */
+  mutable std::unordered_map<std::string, boost::dll::shared_library> libraries_;
 
   template <typename PluginBase>
   void reportErrorCommon(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,

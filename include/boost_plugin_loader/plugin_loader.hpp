@@ -72,7 +72,7 @@ PluginLoader::PluginLoader(const PluginLoader& other)
 {
   std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
   // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
-  libraries_by_path_ = other.libraries_by_path_;
+  libraries_ = other.libraries_;
 }
 
 PluginLoader& PluginLoader::operator=(const PluginLoader& other)
@@ -84,7 +84,7 @@ PluginLoader& PluginLoader::operator=(const PluginLoader& other)
   search_libraries_env = other.search_libraries_env;
 
   std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
-  libraries_by_path_ = other.libraries_by_path_;
+  libraries_ = other.libraries_;
   return *this;
 }
 
@@ -97,7 +97,7 @@ PluginLoader::PluginLoader(PluginLoader&& other) noexcept
 {
   std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
   // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
-  libraries_by_path_ = std::move(other.libraries_by_path_);
+  libraries_ = std::move(other.libraries_);
 }
 
 PluginLoader& PluginLoader::operator=(PluginLoader&& other) noexcept
@@ -109,7 +109,7 @@ PluginLoader& PluginLoader::operator=(PluginLoader&& other) noexcept
   search_libraries_env = std::move(other.search_libraries_env);
 
   std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
-  libraries_by_path_ = std::move(other.libraries_by_path_);
+  libraries_ = std::move(other.libraries_);
   return *this;
 }
 
@@ -154,6 +154,7 @@ loadLibraries(const std::vector<std::string>& library_names, const std::vector<s
   libraries.reserve(library_names.size());
 
   // Loop over each provided library name
+  std::optional<boost::dll::shared_library> lib = std::nullopt;
   for (const std::string& library_name : library_names)
   {
     // First check if the library name is actually a complete, absolute path where the library is located
@@ -163,8 +164,7 @@ loadLibraries(const std::vector<std::string>& library_names, const std::vector<s
       if (boost::filesystem::exists(library_path) && library_path.is_absolute())
       {
         auto it = cache.find(library_path.string());
-        const std::optional<boost::dll::shared_library> lib =
-            (it != cache.end()) ? it->second : loadLibrary(library_path);
+        lib = (it != cache.end()) ? it->second : loadLibrary(library_path);
 
         // If the library exists, add it to the output list and continue to the next library name
         if (lib.has_value())
@@ -184,7 +184,6 @@ loadLibraries(const std::vector<std::string>& library_names, const std::vector<s
 
     // If the library name is not an absolute path, try finding the library at the path defined as the combination of
     // each local search path and the library name
-    std::optional<boost::dll::shared_library> lib = std::nullopt;
     for (const std::string& search_path : search_paths_local)
     {
       const boost::filesystem::path library_path = boost::filesystem::path(search_path) / library_name;
@@ -284,7 +283,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   // Load the libraries
   const std::vector<boost::dll::shared_library> libraries = [&]() {
     std::scoped_lock lock(libraries_mutex_);
-    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_by_path_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_);
   }();
 
   // Create an instance of the plugin
@@ -312,7 +311,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   // Load the libraries
   const std::vector<boost::dll::shared_library> libraries = [&]() {
     std::scoped_lock lock(libraries_mutex_);
-    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_by_path_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_);
   }();
 
   // Check for the symbol name
@@ -339,7 +338,7 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   // Load the libraries
   const std::vector<boost::dll::shared_library> libraries = [&]() {
     std::scoped_lock lock(libraries_mutex_);
-    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_by_path_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_);
   }();
 
   // Populate the list of plugins
@@ -366,7 +365,7 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   // Load the libraries
   const std::vector<boost::dll::shared_library> libraries = [&]() {
     std::scoped_lock lock(libraries_mutex_);
-    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_by_path_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_);
   }();
 
   // Populate the list of sections
@@ -393,7 +392,7 @@ bool PluginLoader::empty() const
 void PluginLoader::clear()
 {
   std::scoped_lock lock(libraries_mutex_);
-  libraries_by_path_.clear();
+  libraries_.clear();
 }
 
 }  // namespace boost_plugin_loader
