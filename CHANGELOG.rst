@@ -2,6 +2,13 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Leverage library cache (`#36 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/36>`_)
+  Co-authored-by: Michael Ripperger <michael.ripperger@swri.org>
+* Bug fix so search path order is preserved (`#35 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/35>`_)
+* Contributors: Levi Armstrong
+
 0.3.2 (2025-08-04)
 ------------------
 * Ensure symbol is associated with defined section (`#33 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/33>`_)
