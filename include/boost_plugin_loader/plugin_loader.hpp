@@ -154,9 +154,9 @@ loadLibraries(const std::vector<std::string>& library_names, const std::vector<s
   libraries.reserve(library_names.size());
 
   // Loop over each provided library name
-  std::optional<boost::dll::shared_library> lib = std::nullopt;
   for (const std::string& library_name : library_names)
   {
+    std::optional<boost::dll::shared_library> lib = std::nullopt;
     // First check if the library name is actually a complete, absolute path where the library is located
     {
       const boost::filesystem::path library_path(library_name);
