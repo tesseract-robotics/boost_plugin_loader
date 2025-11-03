@@ -2,6 +2,11 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixed finding multiple libraries during library loading
+* Contributors: David Spielman
+
 0.4.2 (2025-10-14)
 ------------------
 * Fix debian and archive name
