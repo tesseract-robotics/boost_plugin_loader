@@ -2,8 +2,8 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.3 (2025-11-03)
+------------------
 * Fixed finding multiple libraries during library loading
 * Contributors: David Spielman
 
