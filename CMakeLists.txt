@@ -15,6 +15,7 @@ option(BUILD_SHARED_LIBS "Enables build shared libraries" ON)
 option(ENABLE_CLANG_TIDY "Enables compilation with clang-tidy" OFF)
 option(ENABLE_CODE_COVERAGE "Enables compilation with code coverage" OFF)
 option(BUILD_TESTING "Enables compilation of unit tests" OFF)
+option(BUILD_EXAMPLES "Enables compilation of examples" ON)
 option(ENABLE_RUN_TESTING "Enables running of unit tests as a part of the build" OFF)
 option(ENABLE_CPACK "Enable cpack to generate debian or nuget packages" OFF)
 
@@ -48,7 +49,9 @@ target_code_coverage(
   ENABLE ${ENABLE_CODE_COVERAGE})
 
 # Build examples
-add_subdirectory(examples)
+if(BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 
 # Install headers
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
