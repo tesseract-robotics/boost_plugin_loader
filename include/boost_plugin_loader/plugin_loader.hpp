@@ -352,6 +352,34 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   return plugins;
 }
 
+std::vector<LibraryLifetimeToken> PluginLoader::acquireLibraryLifetimeTokens() const
+{
+  // Check for environment variable for plugin definitions
+  const std::vector<std::string> library_names = getAllLibraryNames(search_libraries_env, search_libraries);
+  if (library_names.empty())
+    throw PluginLoaderException("No plugin libraries were provided!");
+
+  // Check for environment variable for search paths
+  const std::vector<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
+
+  // Load the libraries and populate the internal cache before creating independent lifetime handles
+  std::vector<boost::dll::shared_library> libraries = [&]() {
+    std::scoped_lock lock(libraries_mutex_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_);
+  }();
+
+  std::vector<LibraryLifetimeToken> tokens;
+  tokens.reserve(libraries.size());
+  for (auto& library : libraries)
+  {
+    std::string library_path = library.location().string();
+    auto lifetime = std::make_shared<boost::dll::shared_library>(std::move(library));
+    tokens.push_back({ std::move(library_path), std::move(lifetime) });
+  }
+
+  return tokens;
+}
+
 std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden) const
 {
   // Check for environment variable for plugin definitions

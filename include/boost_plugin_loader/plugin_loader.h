@@ -37,6 +37,18 @@
 namespace boost_plugin_loader
 {
 
+/**
+ * @brief Owns a reference to a loaded plugin library.
+ *
+ * Retaining this token keeps the associated shared library loaded. The lifetime
+ * handle is type-erased so consumers do not depend on the library implementation.
+ */
+struct LibraryLifetimeToken
+{
+  std::string library_path;             /**< Resolved library path used as a stable identity */
+  std::shared_ptr<const void> lifetime; /**< Opaque shared ownership of the loaded library */
+};
+
 /** @brief Used to test for getSection method for getAvailablePlugins */
 template <typename T>
 struct has_getSection
@@ -152,6 +164,14 @@ public:
    * @return True if no search libraries exist
    */
   inline bool empty() const;
+
+  /**
+   * @brief Eagerly load configured libraries and acquire independent lifetime tokens.
+   * @details Each returned token keeps one resolved library loaded even if this PluginLoader is destroyed or cleared.
+   * @return One lifetime token for each successfully loaded library.
+   * @throws PluginLoaderException if no plugin libraries were provided.
+   */
+  inline std::vector<LibraryLifetimeToken> acquireLibraryLifetimeTokens() const;
 
   /** @brief Clear the internal cache of loaded plugin libraries */
   inline void clear();

@@ -352,6 +352,27 @@ TEST(BoostPluginLoaderUnit, LoadTestPlugin)  // NOLINT
   }
 }
 
+TEST(BoostPluginLoaderUnit, AcquireLibraryLifetimeTokens)  // NOLINT
+{
+  std::vector<boost_plugin_loader::LibraryLifetimeToken> tokens;
+  {
+    boost_plugin_loader::PluginLoader plugin_loader;
+    plugin_loader.search_paths.emplace_back(PLUGIN_DIR);
+    plugin_loader.search_libraries.emplace_back(PLUGINS_MULTIPLY);
+
+    tokens = plugin_loader.acquireLibraryLifetimeTokens();
+    ASSERT_EQ(tokens.size(), 1);
+    EXPECT_FALSE(tokens.front().library_path.empty());
+    EXPECT_NE(tokens.front().lifetime, nullptr);
+
+    plugin_loader.clear();
+    EXPECT_NE(tokens.front().lifetime, nullptr);
+  }
+
+  // The token retains its own library ownership after the loader is destroyed.
+  EXPECT_NE(tokens.front().lifetime, nullptr);
+}
+
 TEST(BoostPluginLoaderUnit, LoadTestPluginsSameSymbolDifferentSections)  // NOLINT
 {
   using boost_plugin_loader::PluginLoader;
