@@ -36,6 +36,41 @@
 
 namespace boost_plugin_loader
 {
+/**
+ * @brief The symbols of a loaded library, per section, read from its file once per section and shared by every copy
+ * of its LoadedLibrary.
+ * @details A loaded library's file cannot change under it, so the first read stays valid; re-reading it on every
+ * createInstance cost more than the rest of the call.
+ */
+class SymbolIndex
+{
+public:
+  /**
+   * @brief The symbols exported under @p section, read from @p location on first use
+   * @param location The path of the library file
+   * @param section The section name
+   * @return The symbols; valid for the life of this index
+   */
+  inline const std::vector<std::string>& symbols(const boost::filesystem::path& location, const std::string& section);
+
+private:
+  std::mutex mutex_;
+  std::unordered_map<std::string, std::vector<std::string>> symbols_;
+};
+
+/**
+ * @brief A loaded plugin library, shared by the loader's cache, every plugin instance created from it and every
+ * lifetime token.
+ * @details Plugin instances alias @p library instead of copying it: copying a boost::dll::shared_library re-resolves
+ * the handle's path, which on macOS runs dlopen/dlclose under dyld's process-wide lock. @p location is resolved once,
+ * at load time, for the same reason.
+ */
+struct LoadedLibrary
+{
+  std::shared_ptr<boost::dll::shared_library> library; /**< The loaded library */
+  boost::filesystem::path location;                    /**< Its resolved path */
+  std::shared_ptr<SymbolIndex> symbols;                /**< Its symbols per section */
+};
 
 /**
  * @brief Owns a reference to a loaded plugin library.
@@ -179,7 +214,7 @@ public:
 protected:
   mutable std::mutex libraries_mutex_;
   /** @brief Internal cache of loaded plugin libraries, stored by the path from which the library was loaded */
-  mutable std::unordered_map<std::string, boost::dll::shared_library> libraries_;
+  mutable std::unordered_map<std::string, LoadedLibrary> libraries_;
 
   template <typename PluginBase>
   void reportErrorCommon(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,
@@ -201,14 +236,14 @@ protected:
    */
   template <class ClassBase>
   typename std::enable_if<!has_getSection<ClassBase>::value, bool>::type
-  hasSymbol(const boost::dll::shared_library& lib, const std::string& symbol_name) const;
+  hasSymbol(const LoadedLibrary& lib, const std::string& symbol_name) const;
 
   /**
    * @brief Checks that the library has the input symbol name and that the symbol is associated with the section defined
    * in the plugin class.
    */
   template <class ClassBase>
-  typename std::enable_if<has_getSection<ClassBase>::value, bool>::type hasSymbol(const boost::dll::shared_library& lib,
+  typename std::enable_if<has_getSection<ClassBase>::value, bool>::type hasSymbol(const LoadedLibrary& lib,
                                                                                   const std::string& symbol_name) const;
 };
 

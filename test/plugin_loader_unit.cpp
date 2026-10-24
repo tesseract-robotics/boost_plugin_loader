@@ -436,3 +436,27 @@ int main(int argc, char** argv)
 
   return RUN_ALL_TESTS();
 }
+
+TEST(BoostPluginLoaderUnit, InstancesShareTheCachedLibrary)  // NOLINT
+{
+  using boost_plugin_loader::PluginLoader;
+  using boost_plugin_loader::TestPluginMultiply;
+
+  PluginLoader plugin_loader;
+  plugin_loader.search_paths.emplace_back(PLUGIN_DIR);
+  plugin_loader.search_libraries.emplace_back(PLUGINS_MULTIPLY);
+
+  auto first = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
+  auto second = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
+  std::vector<boost_plugin_loader::LibraryLifetimeToken> tokens = plugin_loader.acquireLibraryLifetimeTokens();
+  ASSERT_EQ(tokens.size(), 1);
+
+  // One owner for all three: each aliases the cached library handle. Copying boost::dll::shared_library instead
+  // re-resolves the handle's path, which on macOS runs dlopen/dlclose under dyld's process-wide lock (#45).
+  EXPECT_FALSE(first.owner_before(second) || second.owner_before(first));
+  EXPECT_FALSE(first.owner_before(tokens.front().lifetime) || tokens.front().lifetime.owner_before(first));
+
+  // The shared owner still keeps the library loaded once the loader lets go of it (#13).
+  plugin_loader.clear();
+  EXPECT_NEAR(first->multiply(5, 5), 25, 1e-8);
+}

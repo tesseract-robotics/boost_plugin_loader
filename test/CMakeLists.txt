@@ -65,3 +65,14 @@ install(
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib)
+
+# Not a test: prints createInstance throughput for 1 vs N threads (#45). Run by hand.
+add_executable(${PROJECT_NAME}_plugin_loader_concurrency_bench plugin_loader_concurrency_bench.cpp)
+target_link_libraries(${PROJECT_NAME}_plugin_loader_concurrency_bench PRIVATE ${PROJECT_NAME}
+                                                                              ${PROJECT_NAME}_test_plugin)
+target_compile_definitions(${PROJECT_NAME}_plugin_loader_concurrency_bench PRIVATE ${COMPILE_DEFINITIONS})
+target_compile_definitions(
+  ${PROJECT_NAME}_plugin_loader_concurrency_bench PRIVATE PLUGIN_DIR="${CMAKE_CURRENT_BINARY_DIR}"
+                                                          PLUGINS_MULTIPLY="${PROJECT_NAME}_test_plugin_multiply")
+target_cxx_version(${PROJECT_NAME}_plugin_loader_concurrency_bench PUBLIC VERSION 17)
+add_dependencies(${PROJECT_NAME}_plugin_loader_concurrency_bench ${PROJECT_NAME}_test_plugin_multiply)
