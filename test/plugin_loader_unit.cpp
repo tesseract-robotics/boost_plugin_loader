@@ -460,3 +460,22 @@ TEST(BoostPluginLoaderUnit, InstancesShareTheCachedLibrary)  // NOLINT
   plugin_loader.clear();
   EXPECT_NEAR(first->multiply(5, 5), 25, 1e-8);
 }
+
+TEST(BoostPluginLoaderUnit, CreateSharedInstanceFromLoadedLibrary)  // NOLINT
+{
+  using boost_plugin_loader::LoadedLibrary;
+  using boost_plugin_loader::TestPluginMultiply;
+
+  const boost::filesystem::path path =
+      boost_plugin_loader::decorate(std::string(PLUGINS_MULTIPLY), std::string(PLUGIN_DIR));
+  std::optional<boost::dll::shared_library> lib = boost_plugin_loader::loadLibrary(path);
+  ASSERT_TRUE(lib.has_value());
+  const LoadedLibrary loaded{ std::make_shared<boost::dll::shared_library>(std::move(lib.value())), path,
+                              std::make_shared<boost_plugin_loader::SymbolIndex>() };
+
+  auto plugin = boost_plugin_loader::createSharedInstance<TestPluginMultiply>(loaded, getSymbolName());
+  EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
+  EXPECT_FALSE(plugin.owner_before(loaded.library) || loaded.library.owner_before(plugin));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+  EXPECT_ANY_THROW(boost_plugin_loader::createSharedInstance<TestPluginMultiply>(loaded, "does_not_exist"));
+}
