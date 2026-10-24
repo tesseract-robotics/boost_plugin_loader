@@ -86,7 +86,7 @@ static std::shared_ptr<ClassBase> createSharedInstance(const LoadedLibrary& lib,
 }
 
 const std::vector<std::string>& SymbolIndex::symbols(const boost::filesystem::path& location,
-                                                    const std::string& section)
+                                                     const std::string& section)
 {
   std::scoped_lock lock(mutex_);
   auto it = symbols_.find(section);
@@ -183,7 +183,8 @@ static std::vector<LoadedLibrary> loadLibraries(const std::vector<std::string>& 
                                                 std::unordered_map<std::string, LoadedLibrary>& cache)
 {
   // The cached library for `key`, loading `path` on a miss. Only a miss resolves the library's location.
-  auto load_cached = [&cache](const std::string& key, const boost::filesystem::path& path) -> std::optional<LoadedLibrary> {
+  auto load_cached = [&cache](const std::string& key,
+                              const boost::filesystem::path& path) -> std::optional<LoadedLibrary> {
     auto it = cache.find(key);
     if (it != cache.end())
       return it->second;

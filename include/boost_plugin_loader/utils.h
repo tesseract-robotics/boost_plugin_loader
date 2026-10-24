@@ -61,7 +61,8 @@ std::vector<std::string> getAllAvailableSymbols(const boost::dll::shared_library
  * @param section The section name to get symbols from
  * @return A list of symbols
  */
-std::vector<std::string> getAllAvailableSymbols(const boost::filesystem::path& library_path, const std::string& section);
+std::vector<std::string> getAllAvailableSymbols(const boost::filesystem::path& library_path,
+                                                const std::string& section);
 
 /**
  * @brief Get a list of available sections
