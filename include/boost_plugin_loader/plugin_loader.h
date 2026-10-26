@@ -37,10 +37,11 @@
 namespace boost_plugin_loader
 {
 /**
- * @brief The symbols of a loaded library, per section, read from its file once per section and shared by every copy
- * of its LoadedLibrary.
+ * @brief A loaded library's symbols per section and its symbol addresses per name, each resolved once; shared by every
+ * copy of its LoadedLibrary.
  * @details A loaded library's file cannot change under it, so the first read stays valid; re-reading it on every
- * createInstance cost more than the rest of the call.
+ * createInstance cost more than the rest of the call. Neither can its symbols move while it stays loaded, so the first
+ * lookup stays valid too; every lookup through the dynamic loader takes its process-wide lock.
  */
 class SymbolIndex
 {
@@ -53,9 +54,18 @@ public:
    */
   inline const std::vector<std::string>& symbols(const boost::filesystem::path& location, const std::string& section);
 
+  /**
+   * @brief The address of @p symbol_name in @p library, resolved on first use
+   * @param library The loaded library this index belongs to
+   * @param symbol_name The symbol name
+   * @return The symbol's address, or nullptr if @p library does not export it
+   */
+  inline void* address(const boost::dll::shared_library& library, const std::string& symbol_name);
+
 private:
   std::mutex mutex_;
   std::unordered_map<std::string, std::vector<std::string>> symbols_;
+  std::unordered_map<std::string, void*> addresses_;
 };
 
 /**
@@ -69,7 +79,7 @@ struct LoadedLibrary
 {
   std::shared_ptr<boost::dll::shared_library> library; /**< The loaded library */
   boost::filesystem::path location;                    /**< Its resolved path */
-  std::shared_ptr<SymbolIndex> symbols;                /**< Its symbols per section */
+  std::shared_ptr<SymbolIndex> symbols;                /**< Its symbols per section and their addresses */
 };
 
 /**

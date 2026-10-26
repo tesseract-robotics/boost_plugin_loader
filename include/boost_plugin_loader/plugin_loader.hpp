@@ -77,12 +77,13 @@ template <class ClassBase>
 static std::shared_ptr<ClassBase> createSharedInstance(const LoadedLibrary& lib, const std::string& symbol_name)
 {
   // Check if library has symbol
-  if (!lib.library->has(symbol_name))
+  void* address = lib.symbols->address(*lib.library, symbol_name);
+  if (address == nullptr)
     throw PluginLoaderException("Failed to find symbol '" + symbol_name +
                                 "' in library: " + boost::dll::shared_library::decorate(lib.location).string());
 
   // Alias the shared library: the instance keeps it loaded without copying it (a copy re-resolves the handle).
-  return std::shared_ptr<ClassBase>(lib.library, &lib.library->get<ClassBase>(symbol_name));
+  return std::shared_ptr<ClassBase>(lib.library, static_cast<ClassBase*>(address));
 }
 
 const std::vector<std::string>& SymbolIndex::symbols(const boost::filesystem::path& location,
@@ -93,6 +94,18 @@ const std::vector<std::string>& SymbolIndex::symbols(const boost::filesystem::pa
   if (it == symbols_.end())
     it = symbols_.emplace(section, getAllAvailableSymbols(location, section)).first;
   return it->second;  // never erased, and unordered_map references survive rehashing
+}
+
+void* SymbolIndex::address(const boost::dll::shared_library& library, const std::string& symbol_name)
+{
+  std::scoped_lock lock(mutex_);
+  auto it = addresses_.find(symbol_name);
+  if (it == addresses_.end())
+  {
+    void* found = library.has(symbol_name) ? &library.get<char>(symbol_name) : nullptr;
+    it = addresses_.emplace(symbol_name, found).first;
+  }
+  return it->second;
 }
 
 PluginLoader::PluginLoader(const PluginLoader& other)
@@ -149,7 +162,7 @@ template <class ClassBase>
 typename std::enable_if<!has_getSection<ClassBase>::value, bool>::type
 PluginLoader::hasSymbol(const LoadedLibrary& lib, const std::string& symbol_name) const
 {
-  return lib.library->has(symbol_name);
+  return lib.symbols->address(*lib.library, symbol_name) != nullptr;
 }
 
 /**
@@ -345,7 +358,7 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
 
   // Check for the symbol name
   return std::any_of(libraries.begin(), libraries.end(),
-                     [&](const auto& lib) { return lib.library->has(plugin_name); });
+                     [&](const auto& lib) { return lib.symbols->address(*lib.library, plugin_name) != nullptr; });
 }
 
 template <class PluginBase>
