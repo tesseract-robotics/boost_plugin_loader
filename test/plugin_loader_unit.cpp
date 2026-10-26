@@ -478,4 +478,10 @@ TEST(BoostPluginLoaderUnit, CreateSharedInstanceFromLoadedLibrary)  // NOLINT
   EXPECT_FALSE(plugin.owner_before(loaded.library) || loaded.library.owner_before(plugin));
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
   EXPECT_ANY_THROW(boost_plugin_loader::createSharedInstance<TestPluginMultiply>(loaded, "does_not_exist"));
+
+  // A second lookup of each name is answered from the index: the same symbol, and the miss still throws.
+  auto again = boost_plugin_loader::createSharedInstance<TestPluginMultiply>(loaded, getSymbolName());
+  EXPECT_EQ(again.get(), plugin.get());
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+  EXPECT_ANY_THROW(boost_plugin_loader::createSharedInstance<TestPluginMultiply>(loaded, "does_not_exist"));
 }

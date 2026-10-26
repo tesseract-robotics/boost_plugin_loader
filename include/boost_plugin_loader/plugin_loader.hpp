@@ -98,14 +98,18 @@ const std::vector<std::string>& SymbolIndex::symbols(const boost::filesystem::pa
 
 void* SymbolIndex::address(const boost::dll::shared_library& library, const std::string& symbol_name)
 {
-  std::scoped_lock lock(mutex_);
-  auto it = addresses_.find(symbol_name);
-  if (it == addresses_.end())
   {
-    void* found = library.has(symbol_name) ? &library.get<char>(symbol_name) : nullptr;
-    it = addresses_.emplace(symbol_name, found).first;
+    std::scoped_lock lock(mutex_);
+    auto it = addresses_.find(symbol_name);
+    if (it != addresses_.end())
+      return it->second;
   }
-  return it->second;
+
+  // Resolve without holding mutex_: the dynamic loader takes its own process-wide lock, and holding both would order
+  // them. A concurrent resolve of the same name finds the same address, so whichever emplace wins is correct.
+  void* found = library.has(symbol_name) ? &library.get<char>(symbol_name) : nullptr;
+  std::scoped_lock lock(mutex_);
+  return addresses_.emplace(symbol_name, found).first->second;
 }
 
 PluginLoader::PluginLoader(const PluginLoader& other)
