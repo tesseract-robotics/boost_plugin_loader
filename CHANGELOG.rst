@@ -2,8 +2,8 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.0 (2026-10-30)
+------------------
 * Merge pull request `#46 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/46>`_ from tesseract-robotics/shared-library-cache
   Share cached libraries with plugin instances instead of copying them
 * CI: run macOS on macos-15; Homebrew dropped bottles for macos-14
