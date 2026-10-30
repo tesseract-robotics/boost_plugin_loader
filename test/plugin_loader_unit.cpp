@@ -436,3 +436,46 @@ int main(int argc, char** argv)
 
   return RUN_ALL_TESTS();
 }
+
+TEST(BoostPluginLoaderUnit, InstancesShareTheCachedLibrary)  // NOLINT
+{
+  using boost_plugin_loader::PluginLoader;
+  using boost_plugin_loader::TestPluginMultiply;
+
+  PluginLoader plugin_loader;
+  plugin_loader.search_paths.emplace_back(PLUGIN_DIR);
+  plugin_loader.search_libraries.emplace_back(PLUGINS_MULTIPLY);
+
+  auto first = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
+  auto second = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
+  std::vector<boost_plugin_loader::LibraryLifetimeToken> tokens = plugin_loader.acquireLibraryLifetimeTokens();
+  ASSERT_EQ(tokens.size(), 1);
+
+  // One owner for all three: each aliases the cached library handle. Copying boost::dll::shared_library instead
+  // re-resolves the handle's path, which on macOS runs dlopen/dlclose under dyld's process-wide lock (#45).
+  EXPECT_FALSE(first.owner_before(second) || second.owner_before(first));
+  EXPECT_FALSE(first.owner_before(tokens.front().lifetime) || tokens.front().lifetime.owner_before(first));
+
+  // The shared owner still keeps the library loaded once the loader lets go of it (#13).
+  plugin_loader.clear();
+  EXPECT_NEAR(first->multiply(5, 5), 25, 1e-8);
+}
+
+TEST(BoostPluginLoaderUnit, CreateSharedInstanceFromLoadedLibrary)  // NOLINT
+{
+  using boost_plugin_loader::LoadedLibrary;
+  using boost_plugin_loader::TestPluginMultiply;
+
+  const boost::filesystem::path path =
+      boost_plugin_loader::decorate(std::string(PLUGINS_MULTIPLY), std::string(PLUGIN_DIR));
+  std::optional<boost::dll::shared_library> lib = boost_plugin_loader::loadLibrary(path);
+  ASSERT_TRUE(lib.has_value());
+  const LoadedLibrary loaded{ std::make_shared<boost::dll::shared_library>(std::move(lib.value())), path,
+                              std::make_shared<boost_plugin_loader::SymbolIndex>() };
+
+  auto plugin = boost_plugin_loader::createSharedInstance<TestPluginMultiply>(loaded, getSymbolName());
+  EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
+  EXPECT_FALSE(plugin.owner_before(loaded.library) || loaded.library.owner_before(plugin));
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-goto)
+  EXPECT_ANY_THROW(boost_plugin_loader::createSharedInstance<TestPluginMultiply>(loaded, "does_not_exist"));
+}

@@ -54,12 +54,33 @@ std::optional<boost::dll::shared_library> loadLibrary(const boost::filesystem::p
 std::vector<std::string> getAllAvailableSymbols(const boost::dll::shared_library& library, const std::string& section);
 
 /**
+ * @brief Get a list of available symbols under the provided section
+ * @details Reads the library file at @p library_path. Unlike the overload taking a loaded library, it never resolves a
+ * library handle's path, which on macOS takes dyld's process-wide lock.
+ * @param library_path The path of the library file
+ * @param section The section name to get symbols from
+ * @return A list of symbols
+ */
+std::vector<std::string> getAllAvailableSymbols(const boost::filesystem::path& library_path,
+                                                const std::string& section);
+
+/**
  * @brief Get a list of available sections
  * @param library The library to search for available sections
  * @param include_hidden Indicate if hidden sections should be included
  * @return A list of sections if they exist.
  */
 std::vector<std::string> getAllAvailableSections(const boost::dll::shared_library& library,
+                                                 bool include_hidden = false);
+
+/**
+ * @brief Get a list of available sections
+ * @details Reads the library file at @p library_path; see the getAllAvailableSymbols overload taking a path.
+ * @param library_path The path of the library file
+ * @param include_hidden Indicate if hidden sections should be included
+ * @return A list of sections if they exist
+ */
+std::vector<std::string> getAllAvailableSections(const boost::filesystem::path& library_path,
                                                  bool include_hidden = false);
 
 /**

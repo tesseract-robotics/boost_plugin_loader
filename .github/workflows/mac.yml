@@ -27,7 +27,7 @@ concurrency:
 jobs:
   macos_ci:
     name: MacOS
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
     - uses: actions/checkout@v4
       with:
@@ -39,7 +39,7 @@ jobs:
       with:
         pkgs: ${{ env.VCPKG_PKGS }}
         triplet: arm64-osx-release
-        cache-key: build-macos-14
+        cache-key: build-macos-15
         token: ${{ github.token }}
     - name: install-depends
       shell: bash

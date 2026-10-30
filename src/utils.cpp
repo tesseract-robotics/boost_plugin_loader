@@ -65,8 +65,13 @@ std::optional<boost::dll::shared_library> loadLibrary(const boost::filesystem::p
 
 std::vector<std::string> getAllAvailableSymbols(const boost::dll::shared_library& library, const std::string& section)
 {
+  return getAllAvailableSymbols(library.location(), section);
+}
+
+std::vector<std::string> getAllAvailableSymbols(const boost::filesystem::path& library_path, const std::string& section)
+{
   // Class `library_info` can extract information from a library
-  boost::dll::library_info inf(library.location());
+  boost::dll::library_info inf(library_path);
 
   // Getting symbols exported from he provided section
   return inf.symbols(section);
@@ -74,8 +79,13 @@ std::vector<std::string> getAllAvailableSymbols(const boost::dll::shared_library
 
 std::vector<std::string> getAllAvailableSections(const boost::dll::shared_library& library, bool include_hidden)
 {
+  return getAllAvailableSections(library.location(), include_hidden);
+}
+
+std::vector<std::string> getAllAvailableSections(const boost::filesystem::path& library_path, bool include_hidden)
+{
   // Class `library_info` can extract information from a library
-  boost::dll::library_info inf(library.location());
+  boost::dll::library_info inf(library_path);
 
   // Getting section from library
   std::vector<std::string> sections = inf.sections();
