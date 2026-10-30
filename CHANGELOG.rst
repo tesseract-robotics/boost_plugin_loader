@@ -2,6 +2,31 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#46 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/46>`_ from tesseract-robotics/shared-library-cache
+  Share cached libraries with plugin instances instead of copying them
+* CI: run macOS on macos-15; Homebrew dropped bottles for macos-14
+* Apply cmake-format
+* Potential fix for pull request finding 'Link benchmark target against Threads::Threads'
+  Co-authored-by: Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>
+* Test createSharedInstance from a LoadedLibrary, including a missing symbol
+* Apply clang-format
+* Share cached libraries with plugin instances instead of copying them
+  createInstance on an already-loaded library cost ~1 ms on macOS and serialised
+  across threads (`#45 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/45>`_). Per call it copied boost::dll::shared_library (dlopen /
+  dlclose under dyld's process-wide lock via path_from_handle), re-read and parsed
+  the library file for its section symbols, and stat'ed every library name.
+  - The cache holds one shared_ptr<shared_library> per library with its location,
+  resolved once at load. Instances alias it; lifetime tokens share it.
+  - A per-library SymbolIndex reads each section's symbols from the file once.
+  - is_absolute() before exists(); a cached absolute path skips the stat.
+  macOS arm64, 8 threads with a loader each: 1020 us -> 0.5 us per call,
+  contention factor 8 -> ~2.5 (test/plugin_loader_concurrency_bench.cpp).
+  createSharedInstance(shared_library, name) is unchanged.
+  Closes `#45 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/45>`_
+* Contributors: Jelle Feringa
+
 0.4.5 (2026-09-09)
 ------------------
 * Add plugin library lifetime tokens
