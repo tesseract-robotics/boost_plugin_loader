@@ -69,9 +69,8 @@ install(
 # Not a test: prints createInstance throughput for 1 vs N threads (#45). Run by hand.
 add_executable(${PROJECT_NAME}_plugin_loader_concurrency_bench plugin_loader_concurrency_bench.cpp)
 find_package(Threads REQUIRED)
-target_link_libraries(${PROJECT_NAME}_plugin_loader_concurrency_bench PRIVATE ${PROJECT_NAME}
-                                                                              ${PROJECT_NAME}_test_plugin
-                                                                              Threads::Threads)
+target_link_libraries(${PROJECT_NAME}_plugin_loader_concurrency_bench
+                      PRIVATE ${PROJECT_NAME} ${PROJECT_NAME}_test_plugin Threads::Threads)
 target_compile_definitions(${PROJECT_NAME}_plugin_loader_concurrency_bench PRIVATE ${COMPILE_DEFINITIONS})
 target_compile_definitions(
   ${PROJECT_NAME}_plugin_loader_concurrency_bench PRIVATE PLUGIN_DIR="${CMAKE_CURRENT_BINARY_DIR}"
