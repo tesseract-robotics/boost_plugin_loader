@@ -107,8 +107,8 @@ add_dependencies(${PROJECT_NAME}_plugin_loader_image_location_unit ${PROJECT_NAM
                  ${PROJECT_NAME}_test_plugin_add)
 add_dependencies(run_tests ${PROJECT_NAME}_plugin_loader_image_location_unit)
 
-# The resolver must name the file dyld mapped, not the path requested: DYLD_LIBRARY_PATH points dyld at a copy of a
-# test library with the same file name. macOS only; the test is run with the variable set, in its own process.
+# The resolver must name the file dyld mapped, not the path requested: DYLD_LIBRARY_PATH points dyld at a copy of a test
+# library with the same file name. macOS only; the test is run with the variable set, in its own process.
 if(APPLE)
   set(REMAP_DIR "${CMAKE_CURRENT_BINARY_DIR}/remap")
   add_executable(${PROJECT_NAME}_plugin_loader_image_location_remap_unit plugin_loader_image_location_remap_unit.cpp)
