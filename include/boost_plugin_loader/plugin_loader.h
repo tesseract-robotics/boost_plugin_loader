@@ -26,8 +26,9 @@
 #include <mutex>
 #include <unordered_map>
 
-// Boost
-#include <boost/dll/shared_library.hpp>
+// Boost Plugin Loader
+#include <boost_plugin_loader/library_registry.h>
+#include <boost_plugin_loader/loaded_library.h>
 
 /** @brief Macro for explicitly template instantiating a plugin loader for a given base class */
 #define INSTANTIATE_PLUGIN_LOADER(PluginBase)                                                                          \
@@ -36,42 +37,6 @@
 
 namespace boost_plugin_loader
 {
-/**
- * @brief The symbols of a loaded library, per section, read from its file once per section and shared by every copy
- * of its LoadedLibrary.
- * @details A loaded library's file cannot change under it, so the first read stays valid; re-reading it on every
- * createInstance cost more than the rest of the call.
- */
-class SymbolIndex
-{
-public:
-  /**
-   * @brief The symbols exported under @p section, read from @p location on first use
-   * @param location The path of the library file
-   * @param section The section name
-   * @return The symbols; valid for the life of this index
-   */
-  inline const std::vector<std::string>& symbols(const boost::filesystem::path& location, const std::string& section);
-
-private:
-  std::mutex mutex_;
-  std::unordered_map<std::string, std::vector<std::string>> symbols_;
-};
-
-/**
- * @brief A loaded plugin library, shared by the loader's cache, every plugin instance created from it and every
- * lifetime token.
- * @details Plugin instances alias @p library instead of copying it: copying a boost::dll::shared_library re-resolves
- * the handle's path, which on macOS runs dlopen/dlclose under dyld's process-wide lock. @p location is resolved once,
- * at load time, for the same reason.
- */
-struct LoadedLibrary
-{
-  std::shared_ptr<boost::dll::shared_library> library; /**< The loaded library */
-  boost::filesystem::path location;                    /**< Its resolved path */
-  std::shared_ptr<SymbolIndex> symbols;                /**< Its symbols per section */
-};
-
 /**
  * @brief Owns a reference to a loaded plugin library.
  *
@@ -118,11 +83,21 @@ struct has_getSection
  *   PluginLoader loader;
  *   loader.search_libraries.insert("my_plugin"); // libmy_plugin.so
  *   std::shared_ptr<PluginBase> p = loader.instantiate<PluginBase>("plugin");
+ *
+ * Loaded libraries are held by a LibraryRegistry, by default the process-wide LibraryRegistry::global(), so a library
+ * is loaded and resolved once per process however many loaders use it.
  */
 class PluginLoader
 {
 public:
+  /** @brief A loader that uses the process-wide registry, LibraryRegistry::global() */
   PluginLoader() = default;
+  /**
+   * @brief A loader that loads into @p registry instead of the process-wide one
+   * @param registry The registry; shared with any other loader given it
+   * @throws PluginLoaderException if @p registry is null
+   */
+  inline explicit PluginLoader(std::shared_ptr<LibraryRegistry> registry);
   ~PluginLoader() = default;
   inline PluginLoader(const PluginLoader& other);
   inline PluginLoader& operator=(const PluginLoader& other);
@@ -208,13 +183,27 @@ public:
    */
   inline std::vector<LibraryLifetimeToken> acquireLibraryLifetimeTokens() const;
 
-  /** @brief Clear the internal cache of loaded plugin libraries */
+  /**
+   * @brief Clear this loader's own view of the loaded libraries
+   * @details Unloads nothing: the registry holds every library it loaded for its own lifetime (the process's, for the
+   * global registry), and plugin instances and lifetime tokens keep theirs loaded. The next call through this loader
+   * looks its libraries up in the registry again.
+   */
   inline void clear();
+
+  /** @brief The registry this loader loads libraries into */
+  inline const std::shared_ptr<LibraryRegistry>& registry() const;
 
 protected:
   mutable std::mutex libraries_mutex_;
-  /** @brief Internal cache of loaded plugin libraries, stored by the path from which the library was loaded */
+  /**
+   * @brief This loader's view of the registry: the entries it has used, by the path each library was loaded from
+   * @details A lookup here takes only this loader's lock. Looking every call up in the registry instead takes the
+   * registry's lock, which every loader in the process shares.
+   */
   mutable std::unordered_map<std::string, LoadedLibrary> libraries_;
+  /** @brief The registry that loads and holds the libraries; never null */
+  std::shared_ptr<LibraryRegistry> registry_{ LibraryRegistry::global() };
 
   template <typename PluginBase>
   void reportErrorCommon(std::ostream& msg, const std::string& plugin_name, bool search_system_folders,

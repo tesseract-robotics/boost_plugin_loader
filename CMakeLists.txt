@@ -35,7 +35,7 @@ set(COVERAGE_EXCLUDE
 initialize_code_coverage(ENABLE ${ENABLE_CODE_COVERAGE})
 add_code_coverage_all_targets(EXCLUDE ${COVERAGE_EXCLUDE} ENABLE ${ENABLE_CODE_COVERAGE})
 
-add_library(${PROJECT_NAME} src/utils.cpp)
+add_library(${PROJECT_NAME} src/image_location.cpp src/library_registry.cpp src/utils.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                                   "$<INSTALL_INTERFACE:include>")
 target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost Boost::filesystem ${CMAKE_DL_LIBS})

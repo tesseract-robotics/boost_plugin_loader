@@ -22,6 +22,8 @@
 // STD
 #include <sstream>
 #include <algorithm>
+#include <mutex>
+#include <utility>
 
 // Boost
 #include <boost/core/demangle.hpp>
@@ -64,7 +66,7 @@ static std::shared_ptr<ClassBase> createSharedInstance(const boost::dll::shared_
 }
 
 /**
- * @brief Create a shared instance for the provided symbol_name from a library shared through the loader's cache
+ * @brief Create a shared instance for the provided symbol_name from a library shared through the library registry
  * @details The instance aliases the shared library, keeping it loaded, instead of copying it as the overload taking a
  * boost::dll::shared_library does: a copy re-resolves the handle's path, which on macOS runs dlopen/dlclose under
  * dyld's process-wide lock.
@@ -77,22 +79,40 @@ template <class ClassBase>
 static std::shared_ptr<ClassBase> createSharedInstance(const LoadedLibrary& lib, const std::string& symbol_name)
 {
   // Check if library has symbol
-  if (!lib.library->has(symbol_name))
+  void* address = lib.symbols->address(*lib.library, symbol_name);
+  if (address == nullptr)
     throw PluginLoaderException("Failed to find symbol '" + symbol_name +
                                 "' in library: " + boost::dll::shared_library::decorate(lib.location).string());
 
   // Alias the shared library: the instance keeps it loaded without copying it (a copy re-resolves the handle).
-  return std::shared_ptr<ClassBase>(lib.library, &lib.library->get<ClassBase>(symbol_name));
+  return std::shared_ptr<ClassBase>(lib.library, static_cast<ClassBase*>(address));
 }
 
 const std::vector<std::string>& SymbolIndex::symbols(const boost::filesystem::path& location,
                                                      const std::string& section)
 {
-  std::scoped_lock lock(mutex_);
-  auto it = symbols_.find(section);
-  if (it == symbols_.end())
-    it = symbols_.emplace(section, getAllAvailableSymbols(location, section)).first;
-  return it->second;  // never erased, and unordered_map references survive rehashing
+  return sections_.findOrInsert(section, [&] { return getAllAvailableSymbols(location, section); });
+}
+
+void* SymbolIndex::address(const boost::dll::shared_library& library, const std::string& symbol_name)
+{
+  // Resolved without the index's lock held (see PublishedMap): the dynamic loader takes its own process-wide lock, and
+  // holding both would order them. A concurrent resolve of the same name finds the same address.
+  return addresses_.findOrInsert(symbol_name, [&]() -> void* {
+    address_resolutions_.fetch_add(1, std::memory_order_relaxed);
+    return library.has(symbol_name) ? static_cast<void*>(&library.get<char>(symbol_name)) : nullptr;
+  });
+}
+
+std::size_t SymbolIndex::addressResolutions() const
+{
+  return address_resolutions_.load(std::memory_order_relaxed);
+}
+
+PluginLoader::PluginLoader(std::shared_ptr<LibraryRegistry> registry) : registry_(std::move(registry))
+{
+  if (registry_ == nullptr)
+    throw PluginLoaderException("PluginLoader requires a LibraryRegistry; got null");
 }
 
 PluginLoader::PluginLoader(const PluginLoader& other)
@@ -105,10 +125,16 @@ PluginLoader::PluginLoader(const PluginLoader& other)
   std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
   // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
   libraries_ = other.libraries_;
+  // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
+  registry_ = other.registry_;
 }
 
 PluginLoader& PluginLoader::operator=(const PluginLoader& other)
 {
+  // Self-assignment would lock libraries_mutex_ twice below.
+  if (this == &other)
+    return *this;
+
   search_system_folders = other.search_system_folders;
   search_paths = other.search_paths;
   search_libraries = other.search_libraries;
@@ -117,9 +143,11 @@ PluginLoader& PluginLoader::operator=(const PluginLoader& other)
 
   std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
   libraries_ = other.libraries_;
+  registry_ = other.registry_;
   return *this;
 }
 
+// A moved-from loader keeps its registry (copied, not moved), so registry_ is never null.
 PluginLoader::PluginLoader(PluginLoader&& other) noexcept
   : search_system_folders(other.search_system_folders)
   , search_paths(std::move(other.search_paths))
@@ -130,10 +158,16 @@ PluginLoader::PluginLoader(PluginLoader&& other) noexcept
   std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
   // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
   libraries_ = std::move(other.libraries_);
+  // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
+  registry_ = other.registry_;
 }
 
 PluginLoader& PluginLoader::operator=(PluginLoader&& other) noexcept
 {
+  // Self-assignment would lock libraries_mutex_ twice below and move the search lists out of themselves.
+  if (this == &other)
+    return *this;
+
   search_system_folders = other.search_system_folders;
   search_paths = std::move(other.search_paths);
   search_libraries = std::move(other.search_libraries);
@@ -142,6 +176,7 @@ PluginLoader& PluginLoader::operator=(PluginLoader&& other) noexcept
 
   std::scoped_lock lock{ libraries_mutex_, other.libraries_mutex_ };
   libraries_ = std::move(other.libraries_);
+  registry_ = other.registry_;
   return *this;
 }
 
@@ -149,7 +184,7 @@ template <class ClassBase>
 typename std::enable_if<!has_getSection<ClassBase>::value, bool>::type
 PluginLoader::hasSymbol(const LoadedLibrary& lib, const std::string& symbol_name) const
 {
-  return lib.library->has(symbol_name);
+  return lib.symbols->address(*lib.library, symbol_name) != nullptr;
 }
 
 /**
@@ -173,6 +208,8 @@ PluginLoader::hasSymbol(const LoadedLibrary& lib, const std::string& symbol_name
  * @param library_names list of library names
  * @param search_paths_local list of local search paths in which to look for plugin libraries
  * @param search_system_folders flag indicating whether to look for plugins in system level folders
+ * @param cache The loader's own entries, looked up first; registry entries it uses are copied into it
+ * @param registry The registry to look libraries up in, and to load them into, when @p cache has no entry
  * @return list of libraries with the specified input names that could be found in the specified input directories.
  * Libraries specified with absolute paths will be returned first in the list before libraries found in local paths (but
  * in no particular order in at the front of the list).
@@ -180,23 +217,42 @@ PluginLoader::hasSymbol(const LoadedLibrary& lib, const std::string& symbol_name
 static std::vector<LoadedLibrary> loadLibraries(const std::vector<std::string>& library_names,
                                                 const std::vector<std::string>& search_paths_local,
                                                 const bool search_system_folders,
-                                                std::unordered_map<std::string, LoadedLibrary>& cache)
+                                                std::unordered_map<std::string, LoadedLibrary>& cache,
+                                                LibraryRegistry& registry)
 {
-  // The cached library for `key`, loading `path` on a miss. Only a miss resolves the library's location.
-  auto load_cached = [&cache](const std::string& key,
-                              const boost::filesystem::path& path) -> std::optional<LoadedLibrary> {
+  // The loader's own entry for `key`, else the registry's, which is added to the loader's cache. Only a hit in
+  // neither loads and resolves the library; a hit in the loader's cache takes no lock shared with other loaders.
+  //
+  // The loader's entry points at the registry's library and symbol index through its own reference counts, each of
+  // which holds a reference to the registry's: copies and plugin instances made through this loader then count
+  // references on memory no other loader writes to. Sharing the registry's counts made every createInstance write to
+  // the same memory from every thread.
+  auto view = [&cache](const std::string& key, const LoadedLibrary& registered) -> LoadedLibrary {
+    LoadedLibrary own{ std::shared_ptr<boost::dll::shared_library>(
+                           registered.library.get(), [keep = registered.library](boost::dll::shared_library*) {}),
+                       registered.location,
+                       std::shared_ptr<SymbolIndex>(registered.symbols.get(),
+                                                    [keep = registered.symbols](SymbolIndex*) {}) };
+    return cache.emplace(key, std::move(own)).first->second;
+  };
+  auto find = [&cache, &registry, &view](const std::string& key) -> std::optional<LoadedLibrary> {
     auto it = cache.find(key);
     if (it != cache.end())
       return it->second;
-
-    std::optional<boost::dll::shared_library> lib = loadLibrary(path);
+    std::optional<LoadedLibrary> lib = registry.find(key);
     if (!lib.has_value())
       return std::nullopt;
-
-    auto library = std::make_shared<boost::dll::shared_library>(std::move(lib.value()));
-    boost::filesystem::path location = library->location();
-    LoadedLibrary loaded{ std::move(library), std::move(location), std::make_shared<SymbolIndex>() };
-    return cache.emplace(key, std::move(loaded)).first->second;
+    return view(key, lib.value());
+  };
+  auto load = [&registry, &find, &view](const std::string& key,
+                                        const boost::filesystem::path& path) -> std::optional<LoadedLibrary> {
+    std::optional<LoadedLibrary> lib = find(key);
+    if (lib.has_value())
+      return lib;
+    lib = registry.load(key, path);
+    if (!lib.has_value())
+      return std::nullopt;
+    return view(key, lib.value());
   };
 
   std::vector<LoadedLibrary> libraries;
@@ -209,11 +265,12 @@ static std::vector<LoadedLibrary> loadLibraries(const std::vector<std::string>& 
     {
       const boost::filesystem::path library_path(library_name);
 
-      // is_absolute() is a string check; exists() is a stat call, so it runs only on a cache miss
-      const bool cached = cache.find(library_path.string()) != cache.end();
-      if (library_path.is_absolute() && (cached || boost::filesystem::exists(library_path)))
+      // is_absolute() is a string check; exists() is a stat call, so it runs only when the library is not yet loaded
+      if (library_path.is_absolute())
       {
-        std::optional<LoadedLibrary> lib = load_cached(library_path.string(), library_path);
+        std::optional<LoadedLibrary> lib = find(library_path.string());
+        if (!lib.has_value() && boost::filesystem::exists(library_path))
+          lib = load(library_path.string(), library_path);
 
         // If the library exists, add it to the output list and continue to the next library name
         if (lib.has_value())
@@ -232,12 +289,12 @@ static std::vector<LoadedLibrary> loadLibraries(const std::vector<std::string>& 
     for (const std::string& search_path : search_paths_local)
     {
       const boost::filesystem::path library_path = boost::filesystem::path(search_path) / library_name;
-      lib = load_cached(library_path.string(), library_path);
+      lib = load(library_path.string(), library_path);
 
       // If the library exists at this path, add the library to the output list and break out of the loop
       if (lib.has_value())
       {
-        libraries.push_back(lib.value());
+        libraries.push_back(std::move(lib.value()));
         break;
       }
     }
@@ -246,9 +303,9 @@ static std::vector<LoadedLibrary> loadLibraries(const std::vector<std::string>& 
     // library (if enabled)
     if (!lib.has_value() && search_system_folders)
     {
-      lib = load_cached(library_name, library_name);
+      lib = load(library_name, library_name);
       if (lib.has_value())
-        libraries.push_back(lib.value());
+        libraries.push_back(std::move(lib.value()));
     }
   }
 
@@ -312,7 +369,7 @@ std::shared_ptr<PluginBase> PluginLoader::createInstance(const std::string& plug
   // Load the libraries
   const std::vector<LoadedLibrary> libraries = [&]() {
     std::scoped_lock lock(libraries_mutex_);
-    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_, *registry_);
   }();
 
   // Create an instance of the plugin
@@ -340,12 +397,12 @@ bool PluginLoader::isPluginAvailable(const std::string& plugin_name) const
   // Load the libraries
   const std::vector<LoadedLibrary> libraries = [&]() {
     std::scoped_lock lock(libraries_mutex_);
-    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_, *registry_);
   }();
 
   // Check for the symbol name
   return std::any_of(libraries.begin(), libraries.end(),
-                     [&](const auto& lib) { return lib.library->has(plugin_name); });
+                     [&](const auto& lib) { return lib.symbols->address(*lib.library, plugin_name) != nullptr; });
 }
 
 template <class PluginBase>
@@ -368,7 +425,7 @@ std::vector<std::string> PluginLoader::getAvailablePlugins(const std::string& se
   // Load the libraries
   const std::vector<LoadedLibrary> libraries = [&]() {
     std::scoped_lock lock(libraries_mutex_);
-    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_, *registry_);
   }();
 
   // Populate the list of plugins
@@ -392,10 +449,10 @@ std::vector<LibraryLifetimeToken> PluginLoader::acquireLibraryLifetimeTokens() c
   // Check for environment variable for search paths
   const std::vector<std::string> search_paths_local = getAllSearchPaths(search_paths_env, search_paths);
 
-  // Load the libraries and populate the internal cache; each token shares a cached library's ownership
+  // Load the libraries into the registry; each token shares a registered library's ownership
   std::vector<LoadedLibrary> libraries = [&]() {
     std::scoped_lock lock(libraries_mutex_);
-    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_, *registry_);
   }();
 
   std::vector<LibraryLifetimeToken> tokens;
@@ -419,7 +476,7 @@ std::vector<std::string> PluginLoader::getAvailableSections(bool include_hidden)
   // Load the libraries
   const std::vector<LoadedLibrary> libraries = [&]() {
     std::scoped_lock lock(libraries_mutex_);
-    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_);
+    return loadLibraries(library_names, search_paths_local, search_system_folders, libraries_, *registry_);
   }();
 
   // Populate the list of sections
@@ -447,6 +504,11 @@ void PluginLoader::clear()
 {
   std::scoped_lock lock(libraries_mutex_);
   libraries_.clear();
+}
+
+const std::shared_ptr<LibraryRegistry>& PluginLoader::registry() const
+{
+  return registry_;
 }
 
 }  // namespace boost_plugin_loader

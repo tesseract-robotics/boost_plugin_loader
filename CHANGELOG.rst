@@ -2,6 +2,32 @@
 Changelog for package boost_plugin_loader
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Share loaded plugin libraries across PluginLoader instances through a process-wide LibraryRegistry
+  A library is loaded and its location resolved once per process instead of once per loader. On macOS resolving a
+  location scans every loaded image (boost::dll path_from_handle), so a new loader in a process with many images paid
+  milliseconds per library.
+  PluginLoader keeps its own view of the registry, so a cached createInstance takes no lock shared with other loaders.
+  Behaviour change: the registry holds strong references, so libraries stay loaded for the life of the process.
+  PluginLoader::clear() clears the loader's view and no longer unloads anything. A loader constructed with its own
+  LibraryRegistry shares nothing with the global one, and its libraries are released with that registry.
+  SymbolIndex and LoadedLibrary move to loaded_library.h, included by plugin_loader.h. SymbolIndex reads no longer lock
+  (PublishedMap, published_map.h: immutable snapshots behind an atomic pointer).
+* Cache resolved symbol addresses per loaded library (from Roelof Oomen's cache-symbol-addresses)
+  SymbolIndex::address() resolves each symbol name once per library, through the dynamic loader and without the index's
+  lock held, and remembers a missing symbol as missing. createSharedInstance, hasSymbol and isPluginAvailable use it,
+  so a cached createInstance no longer calls dlsym, which takes the dynamic loader's process-wide lock. Lookups are
+  lock-free, so the index can be shared by every loader through the registry. SymbolIndex::addressResolutions() counts
+  the resolves, for diagnostics and tests.
+* Resolve a loaded library's path from the newest loaded image (imageLocation, image_location.h)
+  boost::dll's location() on macOS opens and closes every loaded image from the oldest until one has the library's
+  handle; each dlclose runs dyld's garbage collector, so in a process with ~1100 images it took 13-25 ms per library.
+  imageLocation() makes the same handle comparison from the newest image, where a just-loaded library sits, and returns
+  dyld's own name for the image (so a DYLD_LIBRARY_PATH remap is reported as mapped, never as requested). It throws
+  ImageNotFoundError when no image matches. The registry uses it on a miss. Other platforms return location(), which
+  resolves the handle directly. Its natural home is Boost.DLL's macOS path_from_handle.
+
 0.5.0 (2026-10-30)
 ------------------
 * Merge pull request `#46 <https://github.com/tesseract-robotics/boost_plugin_loader/issues/46>`_ from tesseract-robotics/shared-library-cache

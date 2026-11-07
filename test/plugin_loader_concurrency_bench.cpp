@@ -6,6 +6,10 @@
  * contention N threads finish N times the work in the same wall time; a process-wide lock taken per call (dyld's, on
  * macOS) makes them serialise instead.
  *
+ * Usage: plugin_loader_concurrency_bench [threads] [calls] [global|own]
+ * "global" (the default) gives every loader the process-wide LibraryRegistry; "own" gives each loader its own registry,
+ * the layout of the per-loader cache it replaced.
+ *
  * @par License
  * Software License Agreement (Apache License)
  * @par
@@ -23,6 +27,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <thread>
 #include <vector>
@@ -37,12 +42,16 @@ namespace
 // start-up. A fast call needs more: pass the count as the second argument.
 constexpr int DEFAULT_CALLS_PER_THREAD = 2000;
 
-double runSeconds(int threads, int calls)
+double runSeconds(int threads, int calls, bool own_registry)
 {
+  using boost_plugin_loader::LibraryRegistry;
   using boost_plugin_loader::PluginLoader;
   using boost_plugin_loader::TestPluginMultiply;
 
-  std::vector<PluginLoader> loaders(static_cast<std::size_t>(threads));
+  std::vector<PluginLoader> loaders;
+  loaders.reserve(static_cast<std::size_t>(threads));
+  for (int i = 0; i < threads; ++i)
+    loaders.emplace_back(own_registry ? std::make_shared<LibraryRegistry>() : LibraryRegistry::global());
   for (auto& loader : loaders)
   {
     loader.search_paths.emplace_back(PLUGIN_DIR);
@@ -68,9 +77,16 @@ int main(int argc, char** argv)
 {
   const int threads = argc > 1 ? std::atoi(argv[1]) : static_cast<int>(std::thread::hardware_concurrency());
   const int calls = argc > 2 ? std::atoi(argv[2]) : DEFAULT_CALLS_PER_THREAD;
-  const double one = runSeconds(1, calls);
-  const double many = runSeconds(threads, calls);
-  std::cout << "createInstance, cached library, " << calls << " calls per thread\n"
+  const std::string registry = argc > 3 ? argv[3] : "global";
+  if (registry != "global" && registry != "own")
+  {
+    std::cerr << "registry must be 'global' or 'own', got '" << registry << "'\n";
+    return EXIT_FAILURE;
+  }
+  const bool own_registry = registry == "own";
+  const double one = runSeconds(1, calls, own_registry);
+  const double many = runSeconds(threads, calls, own_registry);
+  std::cout << "createInstance, cached library, " << registry << " registry, " << calls << " calls per thread\n"
             << "  1 thread:  " << one << " s (" << 1e6 * one / calls << " us/call)\n"
             << "  " << threads << " threads: " << many << " s; contention factor " << many / one
             << " (1.0 = perfect scaling, " << threads << " = fully serialised)\n";
