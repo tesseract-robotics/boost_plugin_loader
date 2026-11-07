@@ -606,6 +606,37 @@ TEST(BoostPluginLoaderUnit, ClearKeepsRegistryEntries)  // NOLINT
   EXPECT_NEAR(before->multiply(5, 5), 25, 1e-8);
 }
 
+TEST(BoostPluginLoaderUnit, LoaderSelfAssignmentKeepsState)  // NOLINT
+{
+  using boost_plugin_loader::LibraryRegistry;
+  using boost_plugin_loader::PluginLoader;
+  using boost_plugin_loader::TestPluginMultiply;
+
+  auto registry = std::make_shared<LibraryRegistry>();
+  PluginLoader plugin_loader = multiplyLoader(registry);
+  plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
+  const std::vector<std::string> search_paths = plugin_loader.search_paths;
+  const std::vector<std::string> search_libraries = plugin_loader.search_libraries;
+  const void* library = libraryObject(plugin_loader);
+
+  // Assigning a loader to itself must leave it unchanged. Both operators lock this and other's mutex together, so
+  // without a self-assignment check they would lock one mutex twice.
+  PluginLoader& alias = plugin_loader;
+  plugin_loader = alias;
+  EXPECT_EQ(plugin_loader.registry(), registry);
+  EXPECT_EQ(plugin_loader.search_paths, search_paths);
+  EXPECT_EQ(plugin_loader.search_libraries, search_libraries);
+  EXPECT_EQ(libraryObject(plugin_loader), library);
+
+  plugin_loader = std::move(alias);  // NOLINT(bugprone-use-after-move,hicpp-invalid-access-moved)
+  EXPECT_EQ(plugin_loader.registry(), registry);
+  EXPECT_EQ(plugin_loader.search_paths, search_paths);
+  EXPECT_EQ(plugin_loader.search_libraries, search_libraries);
+  EXPECT_EQ(libraryObject(plugin_loader), library);
+  auto plugin = plugin_loader.createInstance<TestPluginMultiply>(getSymbolName());
+  EXPECT_NEAR(plugin->multiply(5, 5), 25, 1e-8);
+}
+
 TEST(BoostPluginLoaderUnit, LoaderViewKeepsRegistryLibraryAlive)  // NOLINT
 {
   using boost_plugin_loader::LibraryRegistry;

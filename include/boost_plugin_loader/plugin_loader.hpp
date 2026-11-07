@@ -131,6 +131,10 @@ PluginLoader::PluginLoader(const PluginLoader& other)
 
 PluginLoader& PluginLoader::operator=(const PluginLoader& other)
 {
+  // Self-assignment would lock libraries_mutex_ twice below.
+  if (this == &other)
+    return *this;
+
   search_system_folders = other.search_system_folders;
   search_paths = other.search_paths;
   search_libraries = other.search_libraries;
@@ -160,6 +164,10 @@ PluginLoader::PluginLoader(PluginLoader&& other) noexcept
 
 PluginLoader& PluginLoader::operator=(PluginLoader&& other) noexcept
 {
+  // Self-assignment would lock libraries_mutex_ twice below and move the search lists out of themselves.
+  if (this == &other)
+    return *this;
+
   search_system_folders = other.search_system_folders;
   search_paths = std::move(other.search_paths);
   search_libraries = std::move(other.search_libraries);
